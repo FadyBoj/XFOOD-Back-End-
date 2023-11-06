@@ -36,6 +36,23 @@ const User = new mongoose.Schema({
     wishList:{
         type:Array,
         required:false
+    },
+    veridied:{
+        type:Boolean,
+        required:true,
+        default:false
+    },
+    verificationCode:{
+        code:{
+            type:Number,
+            required:true,
+            default: Math.floor(Math.random() * 9999999)
+        },
+        createdAt:{
+            type:Date,
+            required:true,
+            default:Date.now()
+        }
     }
 })
 

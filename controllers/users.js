@@ -82,9 +82,6 @@ const login = async(req,res) =>{
         }
 
 
-        
-        
-
 }
 
 // check Auth
@@ -104,6 +101,8 @@ const checkAuth = async(req,res) =>{
     }
 }
 
+//Logout
+
 const logout = async(req,res) =>{
     const token = req.cookies.jwtToken;
 
@@ -115,9 +114,16 @@ const logout = async(req,res) =>{
 }
 
 
+const mobileAuthTest = (req,res) =>{
+    const { name } = req.user;
+    res.status(200).json({msg:`Hello ${name} `})
+}
+
+
 module.exports = {
     createAccount,
     login,
     checkAuth,
-    logout
+    logout,
+    mobileAuthTest
 }

@@ -20,6 +20,10 @@ app.use(errorHandlerMiddleware);
 
 const port = process.env.PORT || 3000;
 
+app.get('/',(req,res) =>{
+    res.send("Test")
+})
+
 const start = async() =>{
     try {
         await connectDB(process.env.MONGO_URI)

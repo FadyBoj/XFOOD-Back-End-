@@ -2,6 +2,7 @@ const User = require('../models/User');
 const CustomAPIError = require('../error/CustomAPIError');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const sendMail = require('./sendMail');
 require('dotenv').config();
 //Create Account
 
@@ -22,13 +23,16 @@ const createAccount = async(req,res) =>{
     bcrypt.hash(password,10,async(err,hash) =>{
 
         try {
-            await User.create({
+            const createdUser = await User.create({
                 firstname:firstname,
                 lastname:lastname,
                 email:email.toLowerCase(),
                 password:hash,
                 age:age
             })
+
+            await sendMail(email.toLowerCase(),createdUser.verificationCode.code)
+            
             res.status(200).json({msg:"successfully created your account"})
         } catch (error) {
             console.log(error)

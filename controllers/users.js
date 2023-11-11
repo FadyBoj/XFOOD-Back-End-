@@ -74,7 +74,9 @@ const login = async(req,res) =>{
                 address:user[0].address,
                 cartItems:user[0].cartItems,
                 previousOrders:user[0].previousOrders,
-                wishList:user[0].wishList
+                wishList:user[0].wishList,
+                verified:user[0].verified,
+                verificationCode:user[0].verificationCode
                }
 
                const oneDay = 1000 * 60 * 60 * 24;
@@ -105,6 +107,40 @@ const checkAuth = async(req,res) =>{
     }
 }
 
+//Verify
+
+const verify = async (req,res) =>{
+
+    console.log(req.user.verified)
+
+    if(req.user.verified)
+    throw new CustomAPIError("Forbidden",403)
+    
+    const { code } = req.body;
+    const { verificationCode, id } = req.user;
+    const userCode = verificationCode.code;
+
+    if(code !== userCode)
+    throw new CustomAPIError("Invalid verification code",400);
+
+    try {
+        await User.findOneAndUpdate({_id:id},{verified:true});
+
+        const newToken = jwt.sign({...req.user,verified:true},process.env.JWT_SECRET);
+
+        const oneDay = 1000 * 60 * 60 * 24;
+
+        res.cookie('jwtToken',newToken,{secure:true,httpOnly:true,maxAge:oneDay});
+
+        res.status(200).json({msg:"Successfully verified your account"});
+        
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500)
+    }
+
+    
+}
+
 //Logout
 
 const logout = async(req,res) =>{
@@ -129,5 +165,6 @@ module.exports = {
     login,
     checkAuth,
     logout,
-    mobileAuthTest
+    mobileAuthTest,
+    verify
 }

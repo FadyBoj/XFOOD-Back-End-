@@ -4,7 +4,6 @@ const transporter = nodemailer.createTransport({
     port: 465,
     secure: true,
     auth: {
-      // TODO: replace `user` and `pass` values from <https://forwardemail.net>
       user: "webdevelop701@gmail.com",
       pass: "hbfo wwxk ptes ujph",
     },
@@ -14,9 +13,9 @@ const transporter = nodemailer.createTransport({
 
     try {
         const info = await transporter.sendMail({
-            from: 'XFOOD <webdevelop701@gmail.com>', // sender address
-            to: reciever, // list of receivers
-            subject: "Verification code", // Subject line
+            from: 'XFOOD <webdevelop701@gmail.com>', 
+            to: reciever, 
+            subject: "Verification code", 
             html: `<!DOCTYPE html>
             <html lang="en">
             <head>

@@ -41,7 +41,7 @@ setInterval(async() =>{
         console.log("Scaled")
         
     } catch (error) {
-        console.log("Error while self pinging")
+        console.log(error)
     }
 
 

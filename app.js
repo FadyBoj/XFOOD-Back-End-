@@ -26,6 +26,17 @@ app.get('/',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))
 })
 
+
+//Preventing Scale Down
+
+setInterval(async() =>{
+
+    const response = await fetch('https://xfood.onrender.com/check-auth');
+    const data = await response.json();
+
+
+},1000 * 60)
+
 const start = async() =>{
     try {
         await connectDB(process.env.MONGO_URI)

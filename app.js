@@ -47,7 +47,7 @@ setInterval(async() =>{
     }
 
 
-},1000 )
+},1000 * 60 )
 
 const start = async() =>{
     try {

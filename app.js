@@ -29,10 +29,14 @@ app.get('/',(req,res) =>{
 
 //Preventing Scale Down
 
+app.get('/self-ping',(req,res) =>{
+    res.status(200).json({msg:"Successfully pinged"})
+})
+
 setInterval(async() =>{
 
     try {
-        const response = await fetch('https://xfood.onrender.com/check-auth');
+        const response = await fetch('https://xfood.onrender.com//self-ping');
         const data = await response.json();
         console.log("Scaled")
         
@@ -41,7 +45,7 @@ setInterval(async() =>{
     }
 
 
-},1000 * 60)
+},1000 )
 
 const start = async() =>{
     try {

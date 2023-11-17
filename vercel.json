@@ -1,7 +1,9 @@
 {   
     "version": 2,
     "builds": [
-      { "src": "*.js", "use": "@vercel/node" }
+      { "src": "*.js", "use": "@vercel/node" ,"config":{
+        "buildCommand":"npm run start"
+      }}
     ],
     "routes": [
         { "src": "/.*", "dest": "/" }

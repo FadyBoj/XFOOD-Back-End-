@@ -1,0 +1,14 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "./",
+        "use": "@now/node-server",
+        "config": { "outputDirectory": "public" }
+      }
+    ],
+    "routes": [
+      { "src": "/api/(.*)", "dest": "/your-source-directory/$1" },
+      { "src": "/(.*)", "dest": "/your-source-directory/index.html" }
+    ]
+  }

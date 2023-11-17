@@ -31,8 +31,14 @@ app.get('/',(req,res) =>{
 
 setInterval(async() =>{
 
-    const response = await fetch('https://xfood.onrender.com/check-auth');
-    const data = await response.json();
+    try {
+        const response = await fetch('https://xfood.onrender.com/check-auth');
+        const data = await response.json();
+        console.log("Scaled")
+        
+    } catch (error) {
+        console.log("Error while self pinging")
+    }
 
 
 },1000 * 60)

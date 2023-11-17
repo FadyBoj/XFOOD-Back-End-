@@ -4,11 +4,14 @@ const app = express();
 const path = require('path')
 const cookieParser = require('cookie-parser');
 const connectDB = require('./db/connect');
+const axios = require('axios');
+const cors = require('cors')
 require('dotenv').config();
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
 
+app.use(cors())
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('./dist'))
@@ -36,8 +39,7 @@ app.get('/self-ping',(req,res) =>{
 setInterval(async() =>{
 
     try {
-        const response = await fetch('https://xfood.onrender.com//self-ping');
-        const data = await response.json();
+        const { data } = await axios.get('http://localhost:3000/self-ping');
         console.log("Scaled")
         
     } catch (error) {

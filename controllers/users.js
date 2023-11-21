@@ -71,12 +71,6 @@ const login = async(req,res) =>{
                 email:user[0].email,
                 firstname:user[0].firstname,
                 lastname:user[0].lastname,
-                address:user[0].address,
-                cartItems:user[0].cartItems,
-                previousOrders:user[0].previousOrders,
-                wishList:user[0].wishList,
-                verified:user[0].verified,
-                verificationCode:user[0].verificationCode
                }
 
                const oneDay = 1000 * 60 * 60 * 24;
@@ -100,9 +94,27 @@ const checkAuth = async(req,res) =>{
 
     try {
         const decodedToken = jwt.verify(token,process.env.JWT_SECRET);
-        res.status(200).json({user:decodedToken});
+        const user = await User.find({email:"fadynabil701@gmail.com"});
+
+        //payload
+        const data = {
+            id:user[0]._id,
+            email:user[0].email,
+            firstname:user[0].firstname,
+            lastname:user[0].lastname,
+            address:user[0].address,
+            cartItems:user[0].cartItems,
+            previousOrders:user[0].previousOrders,
+            wishList:user[0].wishList,
+            verified:user[0].verified,
+            verificationCode:user[0].verificationCode,
+            role:user[0].role,
+            admin:user[0].admin
+           }
+
+         res.status(200).json({user:data});
     } catch (error) {
-        console.log("Error !")
+        console.log(error)
         throw new CustomAPIError("Invalid Token",498);
     }
 }
@@ -111,7 +123,6 @@ const checkAuth = async(req,res) =>{
 
 const verify = async (req,res) =>{
 
-    console.log(req.user.verified)
 
     if(req.user.verified)
     throw new CustomAPIError("Forbidden",403)
@@ -155,8 +166,8 @@ const logout = async(req,res) =>{
 
 
 const mobileAuthTest = (req,res) =>{
-    const { name } = req.user;
-    res.status(200).json({msg:`Hello ${name} `})
+    const { firstname } = req.user;
+    res.status(200).json({msg:`Hello ${firstname} `})
 }
 
 

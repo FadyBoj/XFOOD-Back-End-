@@ -18,8 +18,10 @@ app.use(express.static('./dist'))
 
 //routes
 const usersRoute = require('./routes/users-route');
+const adminsRoute = require('./routes/admin-route');
 
 app.use('/',usersRoute)
+app.use('/admin',adminsRoute)
 
 app.use(errorHandlerMiddleware);
 
@@ -40,7 +42,6 @@ setInterval(async() =>{
 
     try {
         const { data } = await axios.get('https://xfood.onrender.com/self-ping');
-        console.log("Scaled")
         
     } catch (error) {
         console.log(error)

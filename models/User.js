@@ -37,6 +37,16 @@ const User = new mongoose.Schema({
         type:Array,
         required:false
     },
+    admin:{
+      type:Boolean,
+      required:true,
+      default:false  
+    },
+    role:{
+        type:String,
+        required:true,
+        default:'user'
+    },
     verified:{
         type:Boolean,
         required:true,

@@ -17,8 +17,9 @@ router.route('/register').post(createAccount);
 router.route('/login').post(login);
 router.route('/check-auth').get(checkAuth);
 router.route('/logout').get(logout)
-router.route('/test').get(mobileAuthMiddleware,mobileAuthTest)
 router.route('/verify').post(requiredAuth,verify);
+router.route('/mobile').get(mobileAuthMiddleware,mobileAuthTest)
+
 
 
 

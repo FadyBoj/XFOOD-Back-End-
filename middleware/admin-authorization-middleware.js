@@ -14,6 +14,9 @@ const adminAuthorization = async (req,res,next) =>{
             const decoded = jwt.verify(token,process.env.JWT_SECRET);
             const user = await User.find({_id:decoded.id});
 
+            if(user.length === 0)
+            return res.status(500).json({msg:"Something went wrong"})
+
             const data = {
                 id:user[0]._id,
                 email:user[0].email,

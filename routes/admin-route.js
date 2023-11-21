@@ -4,13 +4,13 @@ const router = express.Router();
 
 //controllers
 const {
-    adminTest
+    addIngredient
 } = require('../controllers/Admins');
 
 //middleware
 
 const adminAutorization = require('../middleware/admin-authorization-middleware');
 
-router.route('/test').get(adminAutorization,adminTest)
+router.route('/add-ingredient').post(adminAutorization,addIngredient)
 
 module.exports = router

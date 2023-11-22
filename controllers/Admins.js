@@ -8,7 +8,7 @@ const addIngredient = async(req,res) =>{
     const { title, quantity } = req.body;
 
     if(!title || !quantity)
-    throw new CustomAPIError("Missing information",400);
+    return res.status(400).json({msg:"Missing information"});
 
     try {
         await Ingredient.create({
@@ -22,7 +22,40 @@ const addIngredient = async(req,res) =>{
 
 }
 
+const deleteIngredient = async(req,res) =>{
+   const { title } = req.body;
+   if(!title)
+   return res.status(400).json({msg:"Ingredient title is missing"});
+
+   try {
+    await Ingredient.findOneAndDelete({title:title});
+    res.status(200).json({msg:"Successfully deleted ingredient"})
+   } catch (error) {
+    throw new CustomAPIError("Something went wrong",400);
+   }
+
+}
+
+const editIngredient = async(req,res) =>{
+    const { title, newTitle, quantity } = req.body;
+
+    if(!title || !quantity || !newTitle)
+    return res.status(400).json({msg:"Missing information"});
+
+    try {
+
+       const updatedIngredient =  await Ingredient.findOneAndUpdate({title:title},{title:newTitle,quantity:quantity});
+       if(!updatedIngredient)
+       return res.status(400).json({msg:"Ingredient doesn't exist"});
+
+       res.status(200).json({msg:"Successfully updated ingredient"})
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",400);
+    }
+}
 
 module.exports = {
-    addIngredient
+    addIngredient,
+    deleteIngredient,
+    editIngredient
 }

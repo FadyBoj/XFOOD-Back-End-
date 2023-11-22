@@ -4,13 +4,22 @@ const router = express.Router();
 
 //controllers
 const {
-    addIngredient
+    addIngredient,
+    deleteIngredient,
+    editIngredient
 } = require('../controllers/Admins');
 
 //middleware
 
 const adminAutorization = require('../middleware/admin-authorization-middleware');
 
-router.route('/add-ingredient').post(adminAutorization,addIngredient)
+//Ingredients routes
+router.route('/add-ingredient').post(adminAutorization,addIngredient);
+router.route('/delete-ingredient').delete(adminAutorization,deleteIngredient)
+router.route('/edit-ingredient').patch(adminAutorization,editIngredient)
+
+//Products route
+
+
 
 module.exports = router

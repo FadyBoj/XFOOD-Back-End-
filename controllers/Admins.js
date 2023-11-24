@@ -74,7 +74,7 @@ const addProduct = async(req,res) =>{
     const { title, description, price, category, ingredients } = req.body;
     const files = req.files
 
-    if(!title || !description || !price || !category || !ingredients || !files)
+    if(!title || !description || !price || !category || !ingredients || files.length === 0)
     throw new CustomAPIError("Please fill all product information",400);
 
     let imagesUrl = [];
@@ -89,7 +89,7 @@ const addProduct = async(req,res) =>{
                 await cloudinary.v2.uploader.upload(path.join(rootDirectory,'uploads',item.originalname),
                 { public_id: item.originalname }, 
                 (error, result) =>{
-                    imagesUrl.push(result.url);
+                    imagesUrl.push({public_id:item.originalname,url:result.url});
                 });
     
                 unlinkSync(path.join(rootDirectory,'uploads',item.originalname));
@@ -132,9 +132,99 @@ const addProduct = async(req,res) =>{
   
 }
 
+//Update product
+
+const updateProduct = async(req,res) =>{
+    const { title, description, price, category, ingredients } = req.body; 
+    const files = req.files;
+    let imagesUrl = [];
+    let queryObject = {};
+    const id = '65608f5a2cabcf61b3546f3b';
+
+    const product = await Product.find({_id:id});
+
+    //Removing old images
+
+    if(files.length > 0)
+    {
+    await Promise.all(
+      
+        product[0].images.map(async(item) =>{
+            try {
+             const imageId = item.public_id;
+            await cloudinary.v2.uploader.destroy(imageId,(err,result) =>{
+                if(err)
+                return console.log(err)
+
+            })
+            } catch (error) {
+                console.log(error)
+            }
+            
+        })
+    )
+
+
+        // Adding new images
+
+
+    await Promise.all(
+
+        files.map(async(item) =>{
+
+            try {
+                const imageData = readFileSync(path.join(rootDirectory,'uploads',item.filename));
+                writeFileSync(path.join(rootDirectory,'uploads',item.originalname),imageData);
+                await cloudinary.v2.uploader.upload(path.join(rootDirectory,'uploads',item.originalname),
+                { public_id: item.originalname }, 
+                (error, result) =>{
+                    imagesUrl.push({public_id:item.originalname,url:result.url});
+                });
+    
+                unlinkSync(path.join(rootDirectory,'uploads',item.originalname));
+                unlinkSync(path.join(rootDirectory,'uploads',item.filename));
+            } catch (error) {
+               throw new CustomAPIError("Something went wrong while uploading the images, please try again",500)
+            }
+        })
+    )
+    }
+    
+    //Defining query object
+
+    if(title)
+    queryObject.title = title;
+    if(description)
+    queryObject.description = description;
+    if(price !== 'null')
+    queryObject.price = price;
+    if(category)
+    queryObject.category = category;
+    if(ingredients)
+    queryObject.ingredients = ingredients.split(',');
+    if(imagesUrl.length > 0)
+    queryObject.images = imagesUrl;
+
+    console.log(queryObject)
+
+    // Updating the product
+    try {
+        await Product.findOneAndUpdate({_id:id},queryObject);
+        res.status(200).json({msg:"Successfullt updated the product"})
+    } catch (error) {
+        console.log(error)
+        throw new CustomAPIError("Something went wrong while updating the product",500);
+    }
+
+
+
+    
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
     editIngredient,
-    addProduct
+    addProduct,
+    updateProduct
 }

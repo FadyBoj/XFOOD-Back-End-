@@ -9,7 +9,8 @@ const {
     deleteIngredient,
     editIngredient,
     addProduct,
-    updateProduct
+    updateProduct,
+    deleteProduct
 } = require('../controllers/Admins');   
 
 //middleware
@@ -22,6 +23,7 @@ router.route('/delete-ingredient').delete(adminAutorization,deleteIngredient);
 router.route('/edit-ingredient').patch(adminAutorization,editIngredient);
 router.route('/add-product').post(upload.array('images'),addProduct);
 router.route('/update-product').patch(upload.array('images'),updateProduct);
+router.route('/delete-product').delete(deleteProduct);
 
 
 //Products route

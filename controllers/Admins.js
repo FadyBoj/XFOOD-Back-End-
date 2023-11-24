@@ -135,11 +135,10 @@ const addProduct = async(req,res) =>{
 //Update product
 
 const updateProduct = async(req,res) =>{
-    const { title, description, price, category, ingredients } = req.body; 
+    const { id, title, description, price, category, ingredients } = req.body; 
     const files = req.files;
     let imagesUrl = [];
     let queryObject = {};
-    const id = '65608f5a2cabcf61b3546f3b';
 
     const product = await Product.find({_id:id});
 
@@ -216,9 +215,48 @@ const updateProduct = async(req,res) =>{
         throw new CustomAPIError("Something went wrong while updating the product",500);
     }
 
+}
 
+// Delete product
 
+const deleteProduct = async(req,res) =>{
+    const { id } = req.body;
+
+    if(!id)
+    throw new CustomAPIError("Product ID must be provided",400);
+
+    const product = await Product.find({_id:id});
+    if(product.length === 0)
+    throw new CustomAPIError("Product doesn't exist",404);
+
+    const images = product[0].images;
+
+    await Promise.all(
+        images.map(async(item) =>{
+            try {
+                const imageId = item.public_id;
+            await cloudinary.v2.uploader.destroy(imageId,(err,result) =>{
+                if(err)
+                {
+                    console.log(err);
+                    throw new CustomAPIError("Error while deleting product image",500);
+                }
+            })
+            } catch (error) {
+                throw new CustomAPIError("Error while deleting the product",500)
+            }
+            
+        })
+    )
+
+    try {
+        await Product.deleteOne({_id:id});
+        res.status(200).json({msg:"Successfully deleted the product"});
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500);
+    }
     
+
 }
 
 module.exports = {
@@ -226,5 +264,6 @@ module.exports = {
     deleteIngredient,
     editIngredient,
     addProduct,
-    updateProduct
+    updateProduct,
+    deleteProduct
 }

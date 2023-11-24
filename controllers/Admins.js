@@ -1,6 +1,19 @@
 const Product = require('../models/Product');
 const Ingredient = require('../models/Ingredient');
 const CustomAPIError = require('../error/CustomAPIError');
+const { readFileSync,writeFileSync, unlinkSync, readdirSync} = require('fs');
+const path = require('path');
+const rootDirectory = path.dirname(require.main.filename);
+const  cloudinary = require('cloudinary');
+require('dotenv').config();
+
+//Cloudinary config 
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_NAME, 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_SECRET 
+  });
 
 // Add ingredient
 
@@ -54,8 +67,74 @@ const editIngredient = async(req,res) =>{
     }
 }
 
+//Add product
+
+const addProduct = async(req,res) =>{
+
+    const { title, description, price, category, ingredients } = req.body;
+    const files = req.files
+
+    if(!title || !description || !price || !category || !ingredients || !files)
+    throw new CustomAPIError("Please fill all product information",400);
+
+    let imagesUrl = [];
+
+    await Promise.all(
+
+        files.map(async(item) =>{
+
+            try {
+                const imageData = readFileSync(path.join(rootDirectory,'uploads',item.filename));
+                writeFileSync(path.join(rootDirectory,'uploads',item.originalname),imageData);
+                await cloudinary.v2.uploader.upload(path.join(rootDirectory,'uploads',item.originalname),
+                { public_id: item.originalname }, 
+                (error, result) =>{
+                    imagesUrl.push(result.url);
+                });
+    
+                unlinkSync(path.join(rootDirectory,'uploads',item.originalname));
+                unlinkSync(path.join(rootDirectory,'uploads',item.filename));
+            } catch (error) {
+               throw new CustomAPIError("Something went wrong while uploading the images, please try again",500)
+            }
+
+           
+
+        })
+    )
+
+    const uploadFiles = readdirSync(path.join(rootDirectory,'uploads'));
+    if(uploadFiles)
+    {
+        uploadFiles.forEach((item) =>{
+            unlinkSync(path.join(rootDirectory,'uploads',item))
+        })
+    }
+
+    try {
+        await Product.create({
+            title:title,
+            description:description,
+            price:price,
+            ingredients:ingredients.split(','),
+            images:imagesUrl,
+            category:category,
+            rating:0            
+        })
+
+        res.status(200).json({msg:"Successfully added the product"})
+
+    } catch (error) {
+        console.log(error)
+        throw new CustomAPIError("Something went wrong while adding the product",500);
+    }
+
+  
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
-    editIngredient
+    editIngredient,
+    addProduct
 }

@@ -24,6 +24,11 @@ const Product = new mongoose.Schema({
     category:{
         type:String,
         required:true
+    },
+    rating:{
+        type:Number,
+        require:true,
+        default:0
     }
 })
 

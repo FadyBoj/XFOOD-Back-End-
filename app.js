@@ -22,9 +22,11 @@ app.use(express.static('./dist'))
 //routes
 const usersRoute = require('./routes/users-route');
 const adminsRoute = require('./routes/admin-route');
+const productsAPIRoute = require('./routes/products-api-route');
 
-app.use('/',usersRoute)
-app.use('/admin',adminsRoute)
+app.use('/',usersRoute);
+app.use('/admin',adminsRoute);
+app.use('/products',productsAPIRoute);
 
 app.use(errorHandlerMiddleware);
 

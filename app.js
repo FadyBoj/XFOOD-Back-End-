@@ -13,7 +13,7 @@ const bodyParser = require('body-parser')
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
 
 app.use(cors({
-  origin: 'https://xfood.onrender.com', // Replace with your actual frontend origin
+  origin: ['https://xfood.onrender.com','http://localhost:3000'], // Replace with your actual frontend origin
   credentials: true,
 }));
 app.use(bodyParser.urlencoded({

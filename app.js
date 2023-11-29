@@ -7,14 +7,18 @@ const connectDB = require('./db/connect');
 const axios = require('axios');
 const cors = require('cors')
 require('dotenv').config();
+const bodyParser = require('body-parser')
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
 
-app.use(cors());
-app.use(express.urlencoded({
-    extended:false
+app.use(cors({
+  origin: 'https://xfood.onrender.com', // Replace with your actual frontend origin
+  credentials: true,
 }));
+app.use(bodyParser.urlencoded({
+    extended:false
+}))
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('./dist'))
@@ -36,8 +40,7 @@ app.get('/',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))
 })
 
-
-//Preventing Scale Down
+// Preventing Scale Down
 
 app.get('/self-ping',(req,res) =>{
     res.status(200).json({msg:"Successfully pinged"})
@@ -65,6 +68,5 @@ const start = async() =>{
         console.log(error)
     }
 }
-
 
 start()

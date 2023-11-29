@@ -6,6 +6,7 @@ const User = require('../models/User');
 const requiredAuth = async(req,res,next) =>{
     
     const token = req.cookies.jwtToken;
+    console.log("passed")
 
     if(!token)
     throw new CustomAPIError("No token provided",401);

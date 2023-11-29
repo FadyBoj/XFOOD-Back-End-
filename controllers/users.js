@@ -86,7 +86,7 @@ const login = async(req,res) =>{
 
                const oneDay = 1000 * 60 * 60 * 24;
                const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
-               res.cookie('jwtToken',token,{httpOnly:true,secure:true,maxAge:oneDay});
+                res.cookie('jwtToken',token,{httpOnly:false,secure:true,maxAge:oneDay});
                res.status(200).json({msg:"Successfully logged in"});
 
             })
@@ -99,7 +99,8 @@ const login = async(req,res) =>{
 
 const checkAuth = async(req,res) =>{
     const token = req.cookies.jwtToken;
-
+    console.log(req.cookies)
+    
     if(!token)
     throw new CustomAPIError("Not authorized",401);
 

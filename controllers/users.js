@@ -31,9 +31,20 @@ const createAccount = async(req,res) =>{
                 age:age
             })
 
-            await sendMail(email.toLowerCase(),createdUser.verificationCode.code)
+
+            await sendMail(email.toLowerCase(),createdUser.verificationCode.code);
             
-            res.status(200).json({msg:"successfully created your account"})
+            const data = {
+                id:createdUser._id,
+                email:createdUser.email,
+                firstname:createdUser.firstname,
+                lastname:createdUser.lastname,
+               }
+
+             const oneDay = 1000 * 60 * 60 * 24;
+             const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
+             res.cookie('jwtToken',token,{httpOnly:true,secure:true,maxAge:oneDay});
+             res.status(200).json({msg:"successfully created your account"})
         } catch (error) {
             console.log(error)
         }
@@ -137,11 +148,7 @@ const verify = async (req,res) =>{
     try {
         await User.findOneAndUpdate({_id:id},{verified:true});
 
-        const newToken = jwt.sign({...req.user,verified:true},process.env.JWT_SECRET);
-
-        const oneDay = 1000 * 60 * 60 * 24;
-
-        res.cookie('jwtToken',newToken,{secure:true,httpOnly:true,maxAge:oneDay});
+        res.clearCookie('jwtToken');
 
         res.status(200).json({msg:"Successfully verified your account"});
         

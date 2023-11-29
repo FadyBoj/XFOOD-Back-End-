@@ -245,7 +245,7 @@ const transporter = nodemailer.createTransport({
                 
                 <div class="container">
                        <div class="section-1">
-                         <img draggable="false" class="email-svg" src="https://res.cloudinary.com/ddivi7f83/image/upload/v1699553251/Group_szok95.png">
+                         <img draggable="false" class="email-svg" src="https://res.cloudinary.com/ddivi7f83/image/upload/v1701291172/unnamed_1_cfcazf.png">
                             
                        </div>
                        <div class="section-2">
@@ -262,7 +262,7 @@ const transporter = nodemailer.createTransport({
                 </div>
                 <div class="container-2">
                     <div class="logo">
-                        <img draggable="false" class="logo-svg" src="https://res.cloudinary.com/ddivi7f83/image/upload/v1699551594/IMG-20231109-WA0014-removebg-preview_tzo5yw.png">
+                        <img draggable="false" class="logo-svg" src="https://res.cloudinary.com/ddivi7f83/image/upload/v1701291186/IMG-20231109-WA0014-removebg-preview_dpwvge.png">
                      </div>        
                     <div class="space">
                         <hr />

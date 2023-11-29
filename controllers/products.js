@@ -8,7 +8,7 @@ const getProducts = async(req,res) =>{
         res.status(200).json(products)
         
     } catch (error) {
-        throw new CustomAPIError("Can't get the products",500)
+        throw new CustomAPIError("Can't get the products",500);
     }
 }
 

@@ -52,8 +52,6 @@ const createAccount = async(req,res) =>{
 
     })
 
-
-    
 }
 
 // Login
@@ -100,7 +98,6 @@ const login = async(req,res) =>{
 
 const checkAuth = async(req,res) =>{
     const token = req.cookies.jwtToken;
-    console.log(req.cookies)
     
     if(!token)
     throw new CustomAPIError("Not authorized",401);

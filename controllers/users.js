@@ -142,7 +142,7 @@ const verify = async (req,res) =>{
     const { verificationCode, id } = req.user;
     const userCode = verificationCode.code;
 
-    if(code !== userCode)
+    if(Number(code) !== Number(userCode))
     throw new CustomAPIError("Invalid verification code",400);
 
     try {

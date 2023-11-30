@@ -3,11 +3,13 @@ const express = require('express');
 const app = express();
 const path = require('path')
 const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const connectDB = require('./db/connect');
 const axios = require('axios');
 const cors = require('cors')
 require('dotenv').config();
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const crypto = require('crypto');
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
@@ -21,6 +23,13 @@ app.use(bodyParser.urlencoded({
 }))
 app.use(express.json());
 app.use(cookieParser());
+app.use(cookieSession({
+    name:'session',
+    keys:[crypto.randomBytes(32).toString('hex'),crypto.randomBytes(32).toString('hex')],
+    domain:'https://xfood.onrender.com',
+    path:'/'
+
+}))
 app.use(express.static('./dist'))
 
 //routes

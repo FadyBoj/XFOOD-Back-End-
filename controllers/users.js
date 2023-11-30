@@ -85,7 +85,7 @@ const login = async(req,res) =>{
 
                const oneDay = 1000 * 60 * 60 * 24;
                const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
-                res.cookie('jwtToken',token,{httpOnly:false,secure:true,maxAge:oneDay});
+                res.cookie('jwtToken',token,{secure:true,sameSite:'None',maxAge:oneDay});
                res.status(200).json({msg:"Successfully logged in"});
 
             })

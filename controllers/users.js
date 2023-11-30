@@ -14,10 +14,11 @@ const createAccount = async(req,res) =>{
 
     try {
         const isExist = await User.find({email:email.toLowerCase()});
+        console.log(isExist)
         if(isExist.length > 0)
-        throw new CustomAPIError('This email is registered before, please try to login to your account',400);
+        throw new CustomAPIError('This emadfil is registered before, please try to login to your account',400);
     } catch (error) {
-        throw new CustomAPIError('This email is registered before, please try to login to your account',400);
+        console.log(error)
     }
 
     bcrypt.hash(password,10,async(err,hash) =>{
@@ -70,7 +71,7 @@ const login = async(req,res) =>{
 
         if(user.length === 0)
         {
-            throw new CustomAPIError("This account is not registered yet, please try to create a new account",404)
+            throw new CustomAPIError("This account is not registered yet, please try to create a new account",400)
         }
         else{
             bcrypt.compare(password,user[0].password,(err,result) =>{
@@ -106,7 +107,8 @@ const checkAuth = async(req,res) =>{
 
     try {
         const decodedToken = jwt.verify(token,process.env.JWT_SECRET);
-        const user = await User.find({email:"fadynabil701@gmail.com"});
+
+        const user = await User.find({email:decodedToken.email});
 
         //payload
         const data = {

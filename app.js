@@ -13,9 +13,9 @@ const bodyParser = require('body-parser')
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
 
 app.use(cors({
-  origin: ['https://xfood.onrender.com','http://localhost:3000'], // Replace with your actual frontend origin
-  credentials: true,
-}));
+    origin: ['https://xfood.onrender.com/','http://localhost:3000'], // Replace with your actual frontend origin
+    credentials: true,
+  }));
 app.use(bodyParser.urlencoded({
     extended:false
 }))
@@ -40,7 +40,8 @@ app.get('/',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))
 })
 
-// Preventing Scale Down
+
+//Preventing Scale Down
 
 app.get('/self-ping',(req,res) =>{
     res.status(200).json({msg:"Successfully pinged"})
@@ -68,5 +69,6 @@ const start = async() =>{
         console.log(error)
     }
 }
+
 
 start()

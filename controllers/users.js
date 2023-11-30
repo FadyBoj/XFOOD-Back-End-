@@ -14,11 +14,11 @@ const createAccount = async(req,res) =>{
 
     try {
         const isExist = await User.find({email:email.toLowerCase()});
-        console.log(isExist)
         if(isExist.length > 0)
-        throw new CustomAPIError('This emadfil is registered before, please try to login to your account',400);
+        throw new CustomAPIError('This email is registered before, please try to login to your account',400);
+
     } catch (error) {
-        console.log(error)
+        throw new CustomAPIError('This email is registered before, please try to login to your account',400);
     }
 
     bcrypt.hash(password,10,async(err,hash) =>{

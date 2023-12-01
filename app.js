@@ -30,7 +30,7 @@ app.use(cookieSession({
     path:'/'
 
 }))
-app.use(express.static('./build'))
+app.use(express.static('./dist'))
 
 //routes
 const usersRoute = require('./routes/users-route');

@@ -29,7 +29,12 @@ const createAccount = async(req,res) =>{
                 lastname:lastname,
                 email:email.toLowerCase(),
                 password:hash,
-                age:age
+                age:age,
+                verificationCode:{
+                    code:Math.floor(Math.random() * 9999999),
+                    createdAt:Date(Date.now())
+                }
+
             })
 
 

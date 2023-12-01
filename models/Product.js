@@ -13,10 +13,7 @@ const Product = new mongoose.Schema({
         type:Number,
         required:true
     },
-    items:{
-        type:String,
-        required:true,
-    },
+
     ingredients:{
         type:Array,
         required:true

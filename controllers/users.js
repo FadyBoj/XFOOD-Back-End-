@@ -7,9 +7,9 @@ require('dotenv').config();
 //Create Account
 
 const createAccount = async(req,res) =>{
-    const {firstname, lastname, email, password, age} = req.body;
+    const {firstname, lastname, email, password, age, phoneNumber, address} = req.body;
 
-    if(!firstname || !lastname || !email || !password || !age)
+    if(!firstname || !lastname || !email || !password || !age || !phoneNumber)
     throw new CustomAPIError('Please fill in your information',400);
 
     try {
@@ -29,7 +29,9 @@ const createAccount = async(req,res) =>{
                 lastname:lastname,
                 email:email.toLowerCase(),
                 password:hash,
-                age:age,
+                address:address || [],
+                phoneNumber:phoneNumber,
+                age:Number(age),
                 verificationCode:{
                     code:Math.floor(Math.random() * 9999999),
                     createdAt:Date(Date.now())
@@ -99,6 +101,48 @@ const login = async(req,res) =>{
 
 }
 
+//Mobile login
+
+const mobileLogin = async(req,res) =>{
+
+    const { email, password } = req.body
+
+    if(!email || !password)
+    {
+        throw new CustomAPIError("Please provide email and password",400)
+    }
+
+        const user = await User.find({email:email.toLowerCase()});
+
+        if(user.length === 0)
+        {
+            throw new CustomAPIError("This account is not registered yet, please try to create a new account",400)
+        }
+        else{
+            bcrypt.compare(password,user[0].password,(err,result) =>{
+               if(!result)
+               return res.status(401).json({msg:"Email and password are not matched"});
+
+               const data = {
+                id:user[0]._id,
+                email:user[0].email,
+                firstname:user[0].firstname,
+                lastname:user[0].lastname,
+               }
+
+               const oneDay = 1000 * 60 * 60 * 24;
+               const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
+               res.status(200).json({
+                msg:"Successfully logged in",
+                status:200,
+                token:token
+            });
+
+            })
+        }
+
+}
+
 // check Auth
 
 const checkAuth = async(req,res) =>{
@@ -164,6 +208,17 @@ const verify = async (req,res) =>{
     
 }
 
+
+//Mobile reset password 
+const mobileResetPassword = async(req,res) =>{
+    const {oldPassword, newPassword} = req.body
+
+    if(!oldPassword || !newPassword)
+    throw new CustomAPIError("Old password and new password must be provided",400);
+}
+
+
+
 //Logout
 
 const logout = async(req,res) =>{
@@ -176,18 +231,14 @@ const logout = async(req,res) =>{
     res.status(200).json({msg:'Logged out'});
 }
 
-
-const mobileAuthTest = (req,res) =>{
-    const { firstname } = req.user;
-    res.status(200).json({msg:`Hello ${firstname} `})
-}
-
+ 
 
 module.exports = {
     createAccount,
     login,
+    mobileLogin,
+    mobileResetPassword,
     checkAuth,
     logout,
-    mobileAuthTest,
     verify
 }

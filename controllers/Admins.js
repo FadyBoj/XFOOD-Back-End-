@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const Ingredient = require('../models/Ingredient');
+const Offer = require('../models/offer');
 const CustomAPIError = require('../error/CustomAPIError');
 const { readFileSync,writeFileSync, unlinkSync, readdirSync} = require('fs');
 const path = require('path');
@@ -71,10 +72,11 @@ const editIngredient = async(req,res) =>{
 
 const addProduct = async(req,res) =>{
 
-    const { title, description, price, category, ingredients } = req.body;
+    const { title, description, price, category, ingredients, unit, price_per_unit } = req.body;
     const files = req.files
 
-    if(!title || !description || !price || !category || !ingredients || files.length === 0)
+
+    if(!title || !description || !price || !category  || files.length === 0 || !unit || !price_per_unit)
     throw new CustomAPIError("Please fill all product information",400);
 
     let imagesUrl = [];
@@ -118,7 +120,9 @@ const addProduct = async(req,res) =>{
             price:price,
             ingredients:ingredients.split(','),
             images:imagesUrl,
-            category:category,
+            category:category.toLowerCase(),
+            unit:unit.toLowerCase(),
+            price_per_unit:price_per_unit,
             rating:0            
         })
 
@@ -259,11 +263,38 @@ const deleteProduct = async(req,res) =>{
 
 }
 
+// Add offer
+
+const addOffer = async(req,res) =>{
+   const { title,  price, description } = req.body;
+   const image = req.file
+   const products = [
+    {
+        id:'656cc2e9bb32c5a4e555940e',
+        title:"Chicken Burger"
+    },
+    {
+        id:'656cc320bb32c5a4e5559411',
+        title:'cheese burger'
+    }
+   ]
+
+   if(!title || !price || !products || !description || !image)
+   throw new CustomAPIError("Missing information",400)
+
+    const imageData =   readFileSync(path.join(rootDirectory,'uploads',image.filename));
+    writeFileSync(path.join(rootDirectory,'uploads',image.originalname),imageData);
+    unlinkSync(path.join(rootDirectory,'uploads',image.filename));
+
+
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
     editIngredient,
     addProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    addOffer
 }

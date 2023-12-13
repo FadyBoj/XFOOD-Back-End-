@@ -33,6 +33,10 @@ const User = new mongoose.Schema({
         type:Array,
         required:false
     },
+    phoneNumber:{
+        type:String,
+        required:false
+    },
     wishList:{
         type:Array,
         required:false

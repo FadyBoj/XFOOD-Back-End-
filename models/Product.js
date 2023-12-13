@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Product = new mongoose.Schema({
     title:{
         type:String,
+        unique:true,
         required:true,
     },
     description:{
@@ -13,7 +14,14 @@ const Product = new mongoose.Schema({
         type:Number,
         required:true
     },
-
+    unit:{
+        type:String,
+        required:true,
+    },
+    price_per_unit:{
+        type:Number,
+        required:true,
+    },
     ingredients:{
         type:Array,
         required:true

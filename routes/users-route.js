@@ -9,16 +9,23 @@ const {
     login,
     checkAuth,
     logout,
-    mobileAuthTest,
+    mobileLogin,
+    mobileResetPassword,
     verify
 } = require('../controllers/users');
 
+const {
+    getBotRespond,
+} = require('../controllers/AI');
+
 router.route('/register').post(createAccount);
 router.route('/login').post(login);
+router.route('/mobile-login').post(mobileLogin)
+router.route('/mobile-reset-password').post(mobileAuthMiddleware,mobileResetPassword)
 router.route('/check-auth').get(checkAuth);
 router.route('/logout').get(logout)
 router.route('/verify').post(requiredAuth,verify);
-router.route('/mobile').get(mobileAuthMiddleware,mobileAuthTest)
+router.route('/send-msg').post(getBotRespond)
 
 
 

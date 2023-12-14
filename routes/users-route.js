@@ -11,7 +11,8 @@ const {
     logout,
     mobileLogin,
     mobileResetPassword,
-    verify
+    verify,
+    addToCart
 } = require('../controllers/users');
 
 const {
@@ -25,7 +26,8 @@ router.route('/mobile-reset-password').post(mobileAuthMiddleware,mobileResetPass
 router.route('/check-auth').get(checkAuth);
 router.route('/logout').get(logout)
 router.route('/verify').post(requiredAuth,verify);
-router.route('/send-msg').post(getBotRespond)
+router.route('/send-msg').post(getBotRespond);
+router.route('/add-to-cart').post(addToCart)
 
 
 

@@ -37,6 +37,11 @@ const User = new mongoose.Schema({
         type:String,
         required:false
     },
+    bot:{
+        type:Boolean,
+        required:true,
+        default:false
+    },
     wishList:{
         type:Array,
         required:false

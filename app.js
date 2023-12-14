@@ -10,6 +10,7 @@ const cors = require('cors')
 require('dotenv').config();
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
+const paypal = require('paypal-rest-sdk');
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
@@ -31,6 +32,15 @@ app.use(cookieSession({
 
 }))
 app.use(express.static('./dist'))
+
+// configure paypal with the credentials you got when you created your paypal app
+paypal.configure({
+    'mode': 'sandbox', //sandbox or live 
+    'client_id': 'AS23jny-ZHy0JKOc1On1JzHEBNhNMjyV4f4TIA0X-9ydA4Rwk-30qlChEqnSxHgX_0d7X13-HYkJqcQe', // please provide your client id here 
+    'client_secret': 'EMyHvzVsx8JiBMUOVlZ0USfeVJ-UnQo9JlwSE6Zlcuc8eg2XidapqX9RDn6zTnaFT5760P-Ym9fN9reH' // provide your client secret here 
+  });
+  
+  
 
 //routes
 const usersRoute = require('./routes/users-route');

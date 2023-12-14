@@ -1,8 +1,10 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const CustomAPIError = require('../error/CustomAPIError');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const sendMail = require('./sendMail');
+const Product = require('../models/Product')
 require('dotenv').config();
 //Create Account
 
@@ -90,6 +92,7 @@ const login = async(req,res) =>{
                 lastname:user[0].lastname,
                }
 
+
                const oneDay = 1000 * 60 * 60 * 24;
                const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
                 res.cookie('jwtToken',token,{secure:true,sameSite:'None',maxAge:oneDay});
@@ -129,6 +132,7 @@ const mobileLogin = async(req,res) =>{
                 firstname:user[0].firstname,
                 lastname:user[0].lastname,
                }
+
 
                const oneDay = 1000 * 60 * 60 * 24;
                const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
@@ -211,13 +215,78 @@ const verify = async (req,res) =>{
 
 //Mobile reset password 
 const mobileResetPassword = async(req,res) =>{
-    const {oldPassword, newPassword} = req.body
+    const {oldPassword, newPassword} = req.body;
+    const user = req.user
 
+ 
     if(!oldPassword || !newPassword)
     throw new CustomAPIError("Old password and new password must be provided",400);
+
+    try {
+        const existedUser = await User.find({_id:user.id.toHexString()});
+        const userPassword = existedUser[0].password;
+
+        bcrypt.compare(oldPassword,userPassword,(err,result) =>{
+            if(!result)
+            return res.status(400).json({msg:"Wrong password"})
+        })
+
+
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 
+const addToCart = async(req,res) =>{
+    const {productId, productQuantity, size, extras} = req.body;
+    console.log(req.body)
+    if(!productId || !productQuantity || !size)
+    return res.status(400).json({msg:"Product info must be provided"})
+
+    try {
+        const product = await Product.find({_id:productId});
+        if(product.length === 0)
+        return res.status(404).json({msg:"Product is not found "});
+
+        const previousCart = req.cookies.cart;
+        let newCart = []
+        const fiveDays = 1000 * 60 * 60 * 24 * 5;
+
+
+        if(!previousCart){
+        newCart = [{
+            id:product[0].id,
+            qty:productQuantity,
+            price:product[0].price,
+            size:size,
+            extras:extras || []
+        }]
+        res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+        return res.status(200).json({msg:"Successfully added product to cart"})
+        }
+
+        previousCart.forEach((item) =>{
+           if(item.id === product[0].id)
+           return res.status(400).json({msg:"Product already exist"})
+        })
+
+        newCart = [previousCart,{
+            id:product[0].id,
+            qty:productQuantity,
+            price:product[0].price,
+            size:size,
+            extras:extras || []
+        }].flat()
+        
+        res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+        return res.status(200).json({msg:"Successfully added product to cart",items:newCart})
+        
+
+    } catch (error) {
+        throw new CustomAPIError("Product not found",404)
+    }
+}
 
 //Logout
 
@@ -240,5 +309,6 @@ module.exports = {
     mobileResetPassword,
     checkAuth,
     logout,
-    verify
+    verify,
+    addToCart
 }

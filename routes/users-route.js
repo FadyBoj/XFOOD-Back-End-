@@ -12,7 +12,8 @@ const {
     mobileLogin,
     mobileResetPassword,
     verify,
-    addToCart
+    addToCart,
+    cartItems
 } = require('../controllers/users');
 
 const {
@@ -28,6 +29,7 @@ router.route('/logout').get(logout)
 router.route('/verify').post(requiredAuth,verify);
 router.route('/send-msg').post(getBotRespond);
 router.route('/add-to-cart').post(addToCart)
+router.route('/cart-items').get(cartItems)
 
 
 

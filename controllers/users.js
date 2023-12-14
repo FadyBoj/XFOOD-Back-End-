@@ -288,6 +288,50 @@ const addToCart = async(req,res) =>{
     }
 }
 
+//Cart items 
+
+const cartItems = async(req,res) =>{
+    const cart = req.cookies.cart;
+    if(!cart)
+    return res.status(404).json({msg:"Cart is empty"});
+     let ids = []
+    let cartItems = []
+    let total_price = 0
+
+    cart.map((item) =>{
+        ids.push(item.id);
+    });
+
+
+
+    try {
+        const products = await Product.find({_id:{$in:ids}});
+
+        products.map((item,index) =>{
+            const cartObject ={
+                id:item.id,
+                title:item.title,
+                price:item.price,
+                images:item.images,
+                qty:cart[index].qty,
+                size:cart[index].size,
+                extras:cart[index].extras || []
+            }
+            total_price += (Number(item.price) + ((Number(cart[index].size) - 150) * item.price_per_unit)) * Number(cart[index].qty)
+            console.log(total_price)
+            cartItems.push(cartObject)
+        })
+
+        res.status(200).json({
+            cart:cartItems,
+            total_price:total_price
+        })
+    } catch (error) {
+        console.log(error)
+        throw new CustomAPIError("Something went wrong",500);
+    }
+}
+
 //Logout
 
 const logout = async(req,res) =>{
@@ -310,5 +354,6 @@ module.exports = {
     checkAuth,
     logout,
     verify,
-    addToCart
+    addToCart,
+    cartItems
 }

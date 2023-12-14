@@ -332,6 +332,11 @@ const cartItems = async(req,res) =>{
     }
 }
 
+const clearCart = async(req,res) =>{
+    res.clearCookie('cart');
+    res.status(200).json({msg:"Cart items deleted"})
+}
+
 //Logout
 
 const logout = async(req,res) =>{
@@ -355,5 +360,6 @@ module.exports = {
     logout,
     verify,
     addToCart,
-    cartItems
+    cartItems,
+    clearCart
 }

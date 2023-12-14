@@ -13,7 +13,8 @@ const {
     mobileResetPassword,
     verify,
     addToCart,
-    cartItems
+    cartItems,
+    clearCart
 } = require('../controllers/users');
 
 const {
@@ -30,6 +31,7 @@ router.route('/verify').post(requiredAuth,verify);
 router.route('/send-msg').post(getBotRespond);
 router.route('/add-to-cart').post(addToCart)
 router.route('/cart-items').get(cartItems)
+router.route('/clear-cart').get(clearCart)
 
 
 

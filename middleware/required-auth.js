@@ -6,7 +6,6 @@ const User = require('../models/User');
 const requiredAuth = async(req,res,next) =>{
     
     const token = req.cookies.jwtToken;
-    console.log("passed");
 
     if(!token)
     throw new CustomAPIError("No token provided",401);
@@ -16,7 +15,7 @@ const requiredAuth = async(req,res,next) =>{
         const user = await User.find({_id:decoded.id});
 
         const data = {
-            id:user[0]._id,
+            id:user[0].id,
             email:user[0].email,
             firstname:user[0].firstname,
             lastname:user[0].lastname,

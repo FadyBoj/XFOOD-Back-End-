@@ -10,6 +10,14 @@ const Ingredient = new mongoose.Schema({
         type:Number,
         required:true,
         default:0
+    },
+    unit:{
+        type:String,
+        required:true
+    },
+    price:{
+        type:Number,
+        required:true,
     }
 });
 

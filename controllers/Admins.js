@@ -19,15 +19,18 @@ cloudinary.config({
 // Add ingredient
 
 const addIngredient = async(req,res) =>{
-    const { title, quantity } = req.body;
+    const { title, quantity, price, unit } = req.body;
+    console.log(req.body)
 
-    if(!title || !quantity)
+    if(!title || !quantity || !price || !unit)
     return res.status(400).json({msg:"Missing information"});
 
     try {
         await Ingredient.create({
-            title:title,
-            quantity:quantity
+            title:title.toLowerCase(),
+            quantity:Number(quantity),
+            price:Number(price),
+            unit:unit.toLowerCase()
         })
         res.status(200).json({msg:"Ingredient successfully added "})
     } catch (error) {

@@ -4,7 +4,9 @@ const CustomAPIError = require('../error/CustomAPIError');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const sendMail = require('./sendMail');
-const Product = require('../models/Product')
+const Product = require('../models/Product');
+const Ingredient = require('../models/Ingredient');
+const Order = require('../models/Order')
 require('dotenv').config();
 //Create Account
 
@@ -240,7 +242,6 @@ const mobileResetPassword = async(req,res) =>{
 
 const addToCart = async(req,res) =>{
     const {productId, productQuantity, size, extras} = req.body;
-    console.log(req.body)
     if(!productId || !productQuantity || !size)
     return res.status(400).json({msg:"Product info must be provided"})
 
@@ -253,34 +254,80 @@ const addToCart = async(req,res) =>{
         let newCart = []
         const fiveDays = 1000 * 60 * 60 * 24 * 5;
 
+        //Start
 
-        if(!previousCart){
-        newCart = [{
-            id:product[0].id,
-            qty:productQuantity,
-            price:product[0].price,
-            size:size,
-            extras:extras || []
+        let final_ingredients = [];
+        let temp_extra = []
+        let increase = 0;
+           if(extras && Object.keys(extras).length > 0){
+                let extra_items= []
+                let base_items = []
+
+                for(key in extras){
+                    if(key.startsWith('extra'))
+                    {
+                        extra_items.push(`${key.split('-')[1]}+`);
+                        temp_extra.push(key.split('-')[1]);
+                    }
+                    else{
+                        base_items.push(key)
+                    }
+                }
+
+                if(base_items.length > 0)
+                {
+                    base_items.map((item) =>{
+                        !temp_extra.includes(item) && final_ingredients.push(item)
+                    })
+                }
+
+                final_ingredients = [final_ingredients,extra_items].flat()
+
+           }
+           const ids = final_ingredients.map((item) =>{
+            return (item.split('+')[0]).toLowerCase();
+           })
+
+           const fetchedIngredients = await Ingredient.find({title:{$in:ids}});
+
+           fetchedIngredients.map((item) =>{
+            if(temp_extra.includes(item.title))
+            increase += item.price
+           })
+
+        if(!previousCart)
+        {
+            newCart = [{
+                id:product[0].id,
+                title:product[0].title,
+                qty:productQuantity,
+                price: ((product[0].price + ((size - 150) * product[0].price_per_unit)) * productQuantity) + increase,
+                size:size,
+                ingredients:final_ingredients || {}
         }]
         res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
         return res.status(200).json({msg:"Successfully added product to cart"})
+
         }
+
+        // If cart isn't empty
 
         previousCart.forEach((item) =>{
            if(item.id === product[0].id)
-           return res.status(400).json({msg:"Product already exist"})
+           return res.status(400).json({msg:"Product already exist"});
+            
         })
 
         newCart = [previousCart,{
             id:product[0].id,
             qty:productQuantity,
-            price:product[0].price,
+            price:((product[0].price + ((size - 150) * product[0].price_per_unit)) * productQuantity) + increase,
             size:size,
-            extras:extras || []
+            ingredients:final_ingredients || {}
         }].flat()
         
         res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
-        return res.status(200).json({msg:"Successfully added product to cart",items:newCart})
+        return res.status(200).json({msg:"Successfully added product to cart"})
         
 
     } catch (error) {
@@ -291,50 +338,129 @@ const addToCart = async(req,res) =>{
 //Cart items 
 
 const cartItems = async(req,res) =>{
-    const cart = req.cookies.cart;
-    if(!cart)
-    return res.status(404).json({msg:"Cart is empty"});
-     let ids = []
+   const cart = req.cookies.cart;
+
+   if(!cart)
+   throw new CustomAPIError("Cart is empty",404);
+
+   const ids = cart.map((item) =>{
+    return item.id
+   })
+
+   try {
     let cartItems = []
     let total_price = 0
+    const products = await Product.find({_id:{$in:ids}});
+    products.map((item,index) =>{
+        const cartObject = {
+            id:item.id,
+            title:item.title,
+            price:cart[index].price,
+            ingredients:cart[index].ingredients,
+            images:item.images,
+            size:cart[index].size,
+            qty:cart[index].qty
+        }
+        cartItems.push(cartObject)
+        total_price += cart[index].price
+    })
 
-    cart.map((item) =>{
-        ids.push(item.id);
-    });
+    res.status(200).json({cart:cartItems,total_price:total_price})
 
 
-
-    try {
-        const products = await Product.find({_id:{$in:ids}});
-
-        products.map((item,index) =>{
-            const cartObject ={
-                id:item.id,
-                title:item.title,
-                price:item.price,
-                images:item.images,
-                qty:cart[index].qty,
-                size:cart[index].size,
-                extras:cart[index].extras || []
-            }
-            total_price += (Number(item.price) + ((Number(cart[index].size) - 150) * item.price_per_unit)) * Number(cart[index].qty)
-            console.log(total_price)
-            cartItems.push(cartObject)
-        })
-
-        res.status(200).json({
-            cart:cartItems,
-            total_price:total_price
-        })
-    } catch (error) {
-        console.log(error)
+   } catch (error) {
         throw new CustomAPIError("Something went wrong",500);
-    }
+   }
+
 }
+
+//Clear cart
 
 const clearCart = async(req,res) =>{
     res.clearCookie('cart');
     res.status(200).json({msg:"Cart items deleted"})
+}
+
+// Make order
+
+const makeOrder = async(req,res) =>{
+    const cart = req.cookies.cart;
+    const user = req.user
+    if(!cart)
+    throw new CustomAPIError("Cart is empty",400);
+console.log(cart)
+
+    try {
+        let ingredientsToDiscount = {}
+        let ingredientsToDiscountTitles = []
+        let ingredientsToDiscountValues = []
+        let total_price = 0
+
+        let cartIngredients = []
+
+        const ingredients = await Ingredient.find({});
+        const ingredients_titles = ingredients.map((item) =>{
+            return item.title
+        })
+
+        cart.map((item) =>{
+            total_price += item.price
+            item.ingredients.map((ingr) =>{
+                if(ingr.endsWith('+'))
+                {
+                    cartIngredients.push(ingr.split('+')[0])
+                    cartIngredients.push(ingr.split('+')[0])
+                }
+                else{
+                    cartIngredients.push(ingr.split('+')[0])
+                }
+            })
+        })
+
+        cartIngredients.map((item) =>{
+           ingredientsToDiscount = {...ingredientsToDiscount,[item]:ingredientsToDiscount[item] ?
+           ingredientsToDiscount[item] + 30 : 30
+            }
+        })
+
+        for(key in ingredientsToDiscount)
+        {
+            ingredientsToDiscountTitles.push(key)
+            ingredientsToDiscountValues.push(ingredientsToDiscount[key])
+
+            ingredients.map((item) =>{
+                if(item.title === key )
+                 ingredientsToDiscount[key] = (item.quantity - ingredientsToDiscount[key])
+            })
+        }        
+
+        console.log(ingredientsToDiscount)
+
+
+        for (key in ingredientsToDiscount)
+        {
+            await Ingredient.findOneAndUpdate({title:key},{quantity:ingredientsToDiscount[key]})
+        }
+
+        console.log(total_price)
+
+        const createdOrder = await Order.create({
+            title:`${user.firstname}'s Order`,
+            items:cart,
+            userID:user.id,
+            address:user.address[0],
+            total_price:total_price,
+        })
+
+
+        await User.findOneAndUpdate({_id:user.id},{previousOrders:[user.previousOrders,createdOrder].flat()})
+
+        res.status(200).json({msg:"Success"})
+
+    } catch (error) {
+        console.log(error)
+    }
+
 }
 
 //Logout
@@ -361,5 +487,6 @@ module.exports = {
     verify,
     addToCart,
     cartItems,
-    clearCart
+    clearCart,
+    makeOrder
 }

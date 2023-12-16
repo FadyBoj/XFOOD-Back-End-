@@ -14,7 +14,8 @@ const {
     verify,
     addToCart,
     cartItems,
-    clearCart
+    clearCart,
+    makeOrder
 } = require('../controllers/users');
 
 const {
@@ -32,7 +33,7 @@ router.route('/send-msg').post(getBotRespond);
 router.route('/add-to-cart').post(addToCart)
 router.route('/cart-items').get(cartItems)
 router.route('/clear-cart').get(clearCart)
-
+router.route('/make-order').post(requiredAuth,makeOrder)
 
 
 

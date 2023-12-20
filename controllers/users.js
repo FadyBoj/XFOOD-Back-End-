@@ -394,7 +394,7 @@ const logout = async(req,res) =>{
     if(!token)
     throw new CustomAPIError("No token provided",404);
 
-    await res.clearCookie('jwtToken');
+    res.clearCookie('jwtToken',{secure:true,sameSite:'None'});
     res.status(200).json({msg:'Logged out'});
 }
 

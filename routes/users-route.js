@@ -3,6 +3,7 @@ const router = express.Router();
 
 const mobileAuthMiddleware = require('../middleware/mobile-auth');
 const requiredAuth = require('../middleware/required-auth');
+const isAuth = require('../middleware/isAuth');
 
 const {
     createAccount,
@@ -15,7 +16,6 @@ const {
     cartItems,
     clearCart,
     makeOrder,
-    updatePassword,
     removeFromCart,
     payment
 } = require('../controllers/users');
@@ -26,18 +26,17 @@ const {
 
 router.route('/register').post(createAccount);
 router.route('/login').post(login);
-router.route('/update-password').post(updatePassword)
 router.route('/mobile-login').post(mobileLogin)
 router.route('/check-auth').get(checkAuth);
 router.route('/logout').get(logout)
 router.route('/verify').post(requiredAuth,verify);
 router.route('/send-msg').post(getBotRespond);
-router.route('/add-to-cart').post(addToCart)
+router.route('/add-to-cart').post(isAuth,addToCart)
 router.route('/cart-items').get(cartItems)
 router.route('/clear-cart').get(clearCart)
 router.route('/make-order').post(requiredAuth,makeOrder);
 router.route('/remove-from-cart').post(removeFromCart),
-router.route('/payment').get(payment),
+router.route('/payment').get(payment)
 
 
 

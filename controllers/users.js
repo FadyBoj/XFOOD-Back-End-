@@ -80,16 +80,16 @@ const login = async(req,res) =>{
     {
         throw new CustomAPIError("Please provide email and password",400)
     }
-
+      
         const user = await User.find({email:email.toLowerCase()});
 
         if(user.length === 0)
-        {
-            throw new CustomAPIError("This account is not registered yet, please try to create a new account",400)
-        }
-        else{
-            bcrypt.compare(password,user[0].password,(err,result) =>{
-               if(!result)
+        throw new CustomAPIError("This account is not registered yet, please try to create a new account",400);
+
+            const match = bcrypt.compareSync(password,user[0].password);
+            console.log(match)
+
+               if(!match)
                return res.status(401).json({msg:"Email and password are not matched"});
 
                const data = {
@@ -99,14 +99,22 @@ const login = async(req,res) =>{
                 lastname:user[0].lastname,
                }
 
-
-               const oneDay = 1000 * 60 * 60 * 24;
-               const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
+               try {
+                const cart = req.cookies.cart;
+                if(cart)
+                {
+                 await User.findOneAndUpdate({_id:user[0].id},{cartItems:cart});
+                }
+                const oneDay = 1000 * 60 * 60 * 24;
+                const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
                 res.cookie('jwtToken',token,{secure:true,sameSite:'None',maxAge:oneDay});
-               res.status(200).json({msg:"Successfully logged in"});
+                res.status(200).json({msg:"Successfully logged in"});
+               } catch (error) {
+                console.log(error   )
+                throw new CustomAPIError("Can't log you in ",500)
+               }
+         
 
-            })
-        }
 
 
 }
@@ -222,97 +230,8 @@ const verify = async (req,res) =>{
 
 const addToCart = async(req,res) =>{
     const {productId, productQuantity, size, extras} = req.body;
-    if(!productId || !productQuantity || !size)
-    return res.status(400).json({msg:"Product info must be provided"})
-
-    try {
-        const product = await Product.find({_id:productId});
-        if(product.length === 0)
-        return res.status(404).json({msg:"Product is not found "});
-
-        const previousCart = req.cookies.cart;
-        let newCart = []
-        const fiveDays = 1000 * 60 * 60 * 24 * 5;
-
-        //Start
-
-        let final_ingredients = [];
-        let temp_extra = []
-        let increase = 0;
-           if(extras && Object.keys(extras).length > 0){
-                let extra_items= []
-                let base_items = []
-
-                for(key in extras){
-                    if(key.startsWith('extra'))
-                    {
-                        extra_items.push(`${key.split('-')[1]}+`);
-                        temp_extra.push(key.split('-')[1]);
-                    }
-                    else{
-                        base_items.push(key)
-                    }
-                }
-
-                if(base_items.length > 0)
-                {
-                    base_items.map((item) =>{
-                        !temp_extra.includes(item) && final_ingredients.push(item)
-                    })
-                }
-
-                final_ingredients = [final_ingredients,extra_items].flat()
-
-           }
-           const ids = final_ingredients.map((item) =>{
-            return (item.split('+')[0]).toLowerCase();
-           })
-
-           const fetchedIngredients = await Ingredient.find({title:{$in:ids}});
-
-           fetchedIngredients.map((item) =>{
-            if(temp_extra.includes(item.title))
-            increase += item.price
-           })
-
-        if(!previousCart)
-        {
-            newCart = [{
-                id:product[0].id,
-                title:product[0].title,
-                qty:productQuantity,
-                price: ((product[0].price + ((size - 150) * product[0].price_per_unit)) * productQuantity) + increase,
-                size:size,
-                ingredients:final_ingredients || {}
-        }]
-        res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
-        return res.status(200).json({msg:"Successfully added product to cart"})
-
-        }
-
-        // If cart isn't empty
-
-        previousCart.forEach((item) =>{
-           if(item.id === product[0].id)
-           return res.status(400).json({msg:"Product already exist"});
-            
-        })
-
-        newCart = [previousCart,{
-            id:product[0].id,
-            qty:productQuantity,
-            price:((product[0].price + ((size - 150) * product[0].price_per_unit)) * productQuantity) + increase,
-            size:size,
-            ingredients:final_ingredients || {}
-        }].flat()
-        
-        res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
-        return res.status(200).json({msg:"Successfully added product to cart"})
-        
-
-    } catch (error) {
-        throw new CustomAPIError("Product not found",404)
-    }
+    const isSigned = req.user ? true : false;
+    console.log(isSigned)
 }
 
 //Cart items 
@@ -379,108 +298,92 @@ const clearCart = async(req,res) =>{
 
 // Make order
 
+
 const makeOrder = async(req,res) =>{
-    const cart = req.cookies.cart;
-    const user = req.user
-    if(!cart)
-    throw new CustomAPIError("Cart is empty",400);
-console.log(cart)
-
-    try {
-        let ingredientsToDiscount = {}
-        let ingredientsToDiscountTitles = []
-        let ingredientsToDiscountValues = []
-        let total_price = 0
-
-        let cartIngredients = []
-
-        const ingredients = await Ingredient.find({});
-        const ingredients_titles = ingredients.map((item) =>{
-            return item.title
-        })
-
-        cart.map((item) =>{
-            total_price += item.price
-            item.ingredients.map((ingr) =>{
-                if(ingr.endsWith('+'))
-                {
-                    cartIngredients.push(ingr.split('+')[0])
-                    cartIngredients.push(ingr.split('+')[0])
-                }
-                else{
-                    cartIngredients.push(ingr.split('+')[0])
-                }
-            })
-        })
-
-        cartIngredients.map((item) =>{
-           ingredientsToDiscount = {...ingredientsToDiscount,[item]:ingredientsToDiscount[item] ?
-           ingredientsToDiscount[item] + 30 : 30
-            }
-        })
-
-        for(key in ingredientsToDiscount)
-        {
-            ingredientsToDiscountTitles.push(key)
-            ingredientsToDiscountValues.push(ingredientsToDiscount[key])
-
-            ingredients.map((item) =>{
-                if(item.title === key )
-                 ingredientsToDiscount[key] = (item.quantity - ingredientsToDiscount[key])
-            })
-        }        
-
-        console.log(ingredientsToDiscount)
-
-
-        for (key in ingredientsToDiscount)
-        {
-            await Ingredient.findOneAndUpdate({title:key},{quantity:ingredientsToDiscount[key]})
-        }
-
-        console.log(total_price)
-
-        const createdOrder = await Order.create({
-            title:`${user.firstname}'s Order`,
-            items:cart,
-            userID:user.id,
-            address:user.address[0],
-            total_price:total_price,
-        })
-
-
-        await User.findOneAndUpdate({_id:user.id},{previousOrders:[user.previousOrders,createdOrder].flat()})
-
-        res.status(200).json({msg:"Success"})
-
-    } catch (error) {
-        console.log(error)
-    }
-
+    console.log(req.user)
 }
 
 
-//Update password 
+// const makeOrder = async(req,res) =>{
+//     const cart = req.cookies.cart;
+//     const user = req.user
+//     if(!cart)
+//     throw new CustomAPIError("Cart is empty",400);
+//     console.log(cart)
 
-const updatePassword = async (req, res) => {
-    const { password } = req.body;
-    console.log(passwordStrength(password).score)
-    // const user = await User.findById(userId);
-    //  const updatedUser = {};
-    //  bcrypt.compare(myPlaintextPassword, hash, function(err, result) {
-    //   if(result){
-    //       return res.status(400).json({mes:'this is same password'});
-    //   }
-  
-    //   if(err){
-    //       updatedUser.findOneAndUpdate({_id:userId},{oldpassword:password});
-    //   }
-  
-    //  })
-  
-  
-    // updatedUser.findOneAndUpdate({_id:userId},{password:password});
-  }
+//     try {
+//         let ingredientsToDiscount = {}
+//         let ingredientsToDiscountTitles = []
+//         let ingredientsToDiscountValues = []
+//         let total_price = 0
+
+//         let cartIngredients = []
+
+//         const ingredients = await Ingredient.find({});
+//         const ingredients_titles = ingredients.map((item) =>{
+//             return item.title
+//         })
+
+//         cart.map((item) =>{
+//             total_price += item.price
+//             item.ingredients.map((ingr) =>{
+//                 if(ingr.endsWith('+'))
+//                 {
+//                     cartIngredients.push(ingr.split('+')[0])
+//                     cartIngredients.push(ingr.split('+')[0])
+//                 }
+//                 else{
+//                     cartIngredients.push(ingr.split('+')[0])
+//                 }
+//             })
+//         })
+
+//         cartIngredients.map((item) =>{
+//            ingredientsToDiscount = {...ingredientsToDiscount,[item]:ingredientsToDiscount[item] ?
+//            ingredientsToDiscount[item] + 30 : 30
+//             }
+//         })
+
+//         for(key in ingredientsToDiscount)
+//         {
+//             ingredientsToDiscountTitles.push(key)
+//             ingredientsToDiscountValues.push(ingredientsToDiscount[key])
+
+//             ingredients.map((item) =>{
+//                 if(item.title === key )
+//                  ingredientsToDiscount[key] = (item.quantity - ingredientsToDiscount[key])
+//             })
+//         }        
+
+//         console.log(ingredientsToDiscount)
+
+
+//         for (key in ingredientsToDiscount)
+//         {
+//             await Ingredient.findOneAndUpdate({title:key},{quantity:ingredientsToDiscount[key]})
+//         }
+
+//         console.log(total_price)
+
+//         const createdOrder = await Order.create({
+//             title:`${user.firstname}'s Order`,
+//             items:cart,
+//             userID:user.id,
+//             address:user.address[0],
+//             total_price:total_price,
+//         })
+
+
+//         await User.findOneAndUpdate({_id:user.id},{previousOrders:[user.previousOrders,createdOrder].flat()})
+
+//         res.status(200).json({msg:"Success"})
+
+//     } catch (error) {
+//         console.log(error)
+//     }
+
+// }
+
 
 
 //Logout
@@ -491,7 +394,7 @@ const logout = async(req,res) =>{
     if(!token)
     throw new CustomAPIError("No token provided",404);
 
-    res.clearCookie('jwtToken');
+    await res.clearCookie('jwtToken');
     res.status(200).json({msg:'Logged out'});
 }
 
@@ -565,7 +468,6 @@ module.exports = {
     cartItems,
     clearCart,
     makeOrder,
-    updatePassword,
     removeFromCart,
     payment
 }

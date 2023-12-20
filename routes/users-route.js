@@ -28,7 +28,7 @@ router.route('/register').post(createAccount);
 router.route('/login').post(login);
 router.route('/mobile-login').post(mobileLogin)
 router.route('/check-auth').get(checkAuth);
-router.route('/logout').get(logout)
+router.route('/logout').post(logout)
 router.route('/verify').post(requiredAuth,verify);
 router.route('/send-msg').post(getBotRespond);
 router.route('/add-to-cart').post(isAuth,addToCart)

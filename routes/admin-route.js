@@ -16,16 +16,16 @@ const {
 
 //middleware
 
-const adminAutorization = require('../middleware/admin-authorization-middleware');
+const adminAuthorization = require('../middleware/admin-authorization-middleware');
 
 //Ingredients routes
-router.route('/add-ingredient').post(adminAutorization,addIngredient);
-router.route('/delete-ingredient').delete(adminAutorization,deleteIngredient);
-router.route('/edit-ingredient').patch(adminAutorization,editIngredient);
-router.route('/add-product').post(adminAutorization,upload.array('images'),addProduct);
-router.route('/update-product').patch(adminAutorization,upload.array('images'),updateProduct);
-router.route('/delete-product').delete(adminAutorization,deleteProduct);
-router.route('/add-offer').post(adminAutorization,upload.single('images'),addOffer);
+router.route('/add-ingredient').post(adminAuthorization,addIngredient);
+router.route('/delete-ingredient').delete(adminAuthorization,deleteIngredient);
+router.route('/edit-ingredient').patch(adminAuthorization,editIngredient);
+router.route('/add-product').post(adminAuthorization,upload.array('images'),addProduct);
+router.route('/update-product').patch(adminAuthorization,upload.array('images'),updateProduct);
+router.route('/delete-product').delete(adminAuthorization,deleteProduct);
+router.route('/add-offer').post(adminAuthorization,upload.single('images'),addOffer);
 
 
 //Products route

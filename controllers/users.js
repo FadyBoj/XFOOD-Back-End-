@@ -6,7 +6,9 @@ const bcrypt = require('bcrypt');
 const sendMail = require('./sendMail');
 const Product = require('../models/Product');
 const Ingredient = require('../models/Ingredient');
-const Order = require('../models/Order')
+const Order = require('../models/Order');
+const passwordStrength = require('zxcvbn');
+const paypal = require('paypal-rest-sdk')
 require('dotenv').config();
 //Create Account
 
@@ -24,6 +26,9 @@ const createAccount = async(req,res) =>{
     } catch (error) {
         throw new CustomAPIError('This email is registered before, please try to login to your account',400);
     }
+
+    if(passwordStrength(password).score < 3)
+    throw new CustomAPIError("Please use a stronger password",400)
 
     bcrypt.hash(password,10,async(err,hash) =>{
 
@@ -215,31 +220,6 @@ const verify = async (req,res) =>{
 }
 
 
-//Mobile reset password 
-const mobileResetPassword = async(req,res) =>{
-    const {oldPassword, newPassword} = req.body;
-    const user = req.user
-
- 
-    if(!oldPassword || !newPassword)
-    throw new CustomAPIError("Old password and new password must be provided",400);
-
-    try {
-        const existedUser = await User.find({_id:user.id.toHexString()});
-        const userPassword = existedUser[0].password;
-
-        bcrypt.compare(oldPassword,userPassword,(err,result) =>{
-            if(!result)
-            return res.status(400).json({msg:"Wrong password"})
-        })
-
-
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-
 const addToCart = async(req,res) =>{
     const {productId, productQuantity, size, extras} = req.body;
     if(!productId || !productQuantity || !size)
@@ -374,6 +354,22 @@ const cartItems = async(req,res) =>{
 
 }
 
+
+const removeFromCart = async(req,res) =>{
+    const { id } = req.body;
+    console.log(id)
+    try {
+        
+        const cart = req.cookies.cart;
+        const updatedCart = cart.filter(item => item.id != id );
+        const fiveDays = 1000 * 60 * 60 * 24 * 5;
+        res.cookie('cart',updatedCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+        res.status(200).json({msg:`Product with id ${id} has been removed`})
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 //Clear cart
 
 const clearCart = async(req,res) =>{
@@ -463,6 +459,30 @@ console.log(cart)
 
 }
 
+
+//Update password 
+
+const updatePassword = async (req, res) => {
+    const { password } = req.body;
+    console.log(passwordStrength(password).score)
+    // const user = await User.findById(userId);
+    //  const updatedUser = {};
+    //  bcrypt.compare(myPlaintextPassword, hash, function(err, result) {
+    //   if(result){
+    //       return res.status(400).json({mes:'this is same password'});
+    //   }
+  
+    //   if(err){
+    //       updatedUser.findOneAndUpdate({_id:userId},{oldpassword:password});
+    //   }
+  
+    //  })
+  
+  
+    // updatedUser.findOneAndUpdate({_id:userId},{password:password});
+  }
+
+
 //Logout
 
 const logout = async(req,res) =>{
@@ -475,18 +495,77 @@ const logout = async(req,res) =>{
     res.status(200).json({msg:'Logged out'});
 }
 
+const createPay = ( payment ) => {
+    return new Promise( ( resolve , reject ) => {
+        paypal.payment.create( payment , function( err , payment ) {
+         if ( err ) {
+             reject(err); 
+         }
+        else {
+            resolve(payment); 
+        }
+        }); 
+    });
+}						
+
+
+const payment  = async ( req , res ) => {
+    try {
+        const paymenT = {
+            "intent": "authorize",
+	"payer": {
+		"payment_method": "paypal"
+	},
+	"redirect_urls": {
+		"return_url": "http://127.0.0.1:8080/success",
+		"cancel_url": "http://127.0.0.1:8080/err"
+	},
+	"transactions": [{
+		"amount": {
+			"total": 39.00,
+			"currency": "USD"
+		},
+		"description": " a book on mean stack "
+	}]
+    }
+	
+	
+	// call the create Pay method 
+    createPay( paymenT ) 
+        .then( ( transaction ) => {
+            var id = transaction.id; 
+            var links = transaction.links;
+            var counter = links.length; 
+            while( counter -- ) {
+                if ( links[counter].method == 'REDIRECT') {
+					// redirect to paypal where user approves the transaction 
+                    return res.redirect( links[counter].href )
+                }
+            }
+        })
+        .catch( ( err ) => { 
+            console.log( err ); 
+        });
+    } catch (error) {
+        console.log(error)
+    }
+	// create payment object 
+   
+}; 
  
 
 module.exports = {
     createAccount,
     login,
     mobileLogin,
-    mobileResetPassword,
     checkAuth,
     logout,
     verify,
     addToCart,
     cartItems,
     clearCart,
-    makeOrder
+    makeOrder,
+    updatePassword,
+    removeFromCart,
+    payment
 }

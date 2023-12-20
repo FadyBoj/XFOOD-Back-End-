@@ -5,10 +5,12 @@ const User = require('../models/User');
 
 const requiredAuth = async(req,res,next) =>{
     
-    const token = req.cookies.jwtToken;
+    const token = req.cookies.jwtToken || req.headers.authorization;
 
     if(!token)
     throw new CustomAPIError("No token provided",401);
+
+    console.log(token)
 
     try {
         const decoded = jwt.verify(token,process.env.JWT_SECRET);

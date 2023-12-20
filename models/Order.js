@@ -25,7 +25,12 @@ const Order = new mongoose.Schema({
     address:{
         type:String,
         required:true
-    }
+    },
+    payment_type:{
+        type:String,
+        required:true
+    },
+
 })
 
 module.exports = mongoose.model('Order',Order);

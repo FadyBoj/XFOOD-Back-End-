@@ -31,9 +31,9 @@ const adminAuthorization = async (req,res,next) =>{
                 role:user[0].role,
                 admin:user[0].admin
                }
-
-            const admin = user[0].admin
-
+               
+               const admin = user[0].admin
+               
              if(!admin)
             throw new CustomAPIError("Not authorized",401);
 
@@ -41,6 +41,7 @@ const adminAuthorization = async (req,res,next) =>{
             next();
 
         } catch (error) {
+            console.log(error)
             throw new CustomAPIError("Not authorized",498)
 
         }

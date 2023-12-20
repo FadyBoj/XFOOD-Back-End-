@@ -121,7 +121,7 @@ const addProduct = async(req,res) =>{
             title:title,
             description:description,
             price:price,
-            ingredients:ingredients.split(','),
+            ingredients:ingredients,
             images:imagesUrl,
             category:category.toLowerCase(),
             unit:unit.toLowerCase(),

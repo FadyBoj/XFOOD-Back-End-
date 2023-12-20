@@ -229,9 +229,32 @@ const verify = async (req,res) =>{
 
 
 const addToCart = async(req,res) =>{
-    const {productId, productQuantity, size, extras} = req.body;
-    const isSigned = req.user ? true : false;
-    console.log(isSigned)
+    try {
+
+
+        const {productId, productQuantity, size, extras} = req.body;
+
+        if(!productId || !productQuantity || !size || !extras)
+        throw new CustomAPIError("Please provide product information",400)
+    
+        const user = req.user
+        const isSigned = user ? true : false;
+        const product = await Product.findById(productId);
+        const cartObj = {
+            id:product.id,
+            size:size,
+            qty:productQuantity,
+            ingredients:extras
+        }
+
+
+
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong while adding to cart",500)
+
+    }
+
+  
 }
 
 //Cart items 

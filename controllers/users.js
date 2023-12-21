@@ -247,7 +247,22 @@ const addToCart = async(req,res) =>{
             ingredients:extras
         }
 
+        console.log(cartObj)
 
+        // if(isSigned)
+        // {
+        //     await User.findOneAndUpdate({_id:user.id},{
+        //         cartItems:[user.cartItems,cartObj].flat()
+        //     })
+        // }
+        // else{
+        //     const cart = req.cookies.cart
+        //     if(!cart)
+        //     {
+        //         const fiveDays = 1000 * 60 * 60 * 24 * 5;
+        //         res.cookie('cart',cart,{secure:true,sameSite:'None',maxAge:fiveDays})
+        //     }
+        // }
 
     } catch (error) {
         throw new CustomAPIError("Something went wrong while adding to cart",500)

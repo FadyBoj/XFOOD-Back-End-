@@ -105,6 +105,7 @@ const login = async(req,res) =>{
                 if(cart)
                 {
                  await User.findOneAndUpdate({_id:user[0].id},{cartItems:cart});
+                 res.clearCookie('cart');
                 }
                 const oneDay = 1000 * 60 * 60 * 24;
                 const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});

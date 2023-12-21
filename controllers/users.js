@@ -366,7 +366,12 @@ const cartItems = async(req,res) =>{
 
 
     try {
-        const products = await Product.find({_id:{$in:[ids]}});
+        let products = []
+        for (item of cart)
+        {
+            const product = await Product.find({_id:item.id});
+            products.push(product[0])
+        }
         products.forEach((item,index) =>{
 
             let increaseFactor = 0
@@ -383,6 +388,7 @@ const cartItems = async(req,res) =>{
                 size:cart[index].size,
                 qty:cart[index].qty
             }
+            console.log(cartObj)
             total_price += cartObj.price
             cartItems.push(cartObj)
         })
@@ -390,7 +396,7 @@ const cartItems = async(req,res) =>{
         res.status(200).json({cart:cartItems,total_price:total_price})
 
     } catch (error) {
-        console.console.log(error)
+        console.log(error)
         throw new CustomAPIError("Something went wrong",500);
     }
 

@@ -8,7 +8,8 @@ const Product = require('../models/Product');
 const Ingredient = require('../models/Ingredient');
 const Order = require('../models/Order');
 const passwordStrength = require('zxcvbn');
-const paypal = require('paypal-rest-sdk')
+const paypal = require('paypal-rest-sdk');
+const compareArrays = require('../utils/compareArrays');
 require('dotenv').config();
 //Create Account
 
@@ -240,36 +241,111 @@ const addToCart = async(req,res) =>{
         const user = req.user
         const isSigned = user ? true : false;
         const product = await Product.findById(productId);
-        const cartObj = {
-            id:product.id,
-            size:size,
-            qty:productQuantity,
-            ingredients:extras
+      
+
+        let temp_extra = [];
+        let ingr =  [];
+        let ingredients_titles =[] 
+        let ingredients_qtys = {}
+
+
+        const ingredients = await Ingredient.find({});
+
+        ingredients.map((item) =>{
+            ingredients_titles.push(item.title)
+            ingredients_qtys = {...ingredients_qtys,[item.title]:item.quantity}
+        })
+    
+
+        if(Object.keys(extras).length > 0)
+        {
+           const extrasKeys = Object.keys(extras)
+           extrasKeys.forEach((key,index)=>{
+
+            if(key.startsWith('extra') && ingredients_titles.includes(key.split('-')[1]))
+            {
+                if(ingredients_qtys[key.split('-')[1]] < 100)
+                return res.status(400).json({msg:"Out of stock"})
+
+                ingr.push(`${key.split('-')[1]}+`);
+                temp_extra.push(key.split('-')[1]);
+            }
+           })
+
+           extrasKeys.map((key,index)=>{
+
+            if(ingredients_titles.includes(key) && !temp_extra.includes(key))
+            {   
+                if(ingredients_qtys[key] < 100)
+                return res.status(400).json({msg:"Out of stock"})
+                ingr.push(key)
+            } 
+           })
+           
         }
+        
 
-        console.log(cartObj)
+       const cartObj = {
+        id:product.id,
+        size:size,
+        qty:productQuantity,
+        ingredients:ingr
+    }
 
-        // if(isSigned)
-        // {
-        //     await User.findOneAndUpdate({_id:user.id},{
-        //         cartItems:[user.cartItems,cartObj].flat()
-        //     })
-        // }
-        // else{
-        //     const cart = req.cookies.cart
-        //     if(!cart)
-        //     {
-        //         const fiveDays = 1000 * 60 * 60 * 24 * 5;
-        //         res.cookie('cart',cart,{secure:true,sameSite:'None',maxAge:fiveDays})
-        //     }
-        // }
+       if(!isSigned)
+       {
+            const browserCart = req.cookies.cart;
 
+            //If empty
+            if(!browserCart)
+            {
+                const fiveDays = 1000 * 60 * 60 * 24 * 5;
+                res.cookie('cart',[cartObj],{secure:true,sameSite:'None',maxAge:fiveDays});
+                return res.status(200).json({msg:"Successfully added the product to cart"})
+            }
+            //If not empty
+            for(const item of browserCart)
+            {
+                if(compareArrays(item.ingredients,ingr) && item.id === product.id)
+                return res.status(400).json({msg:"Product already in cart"});
+            }
+
+            const newCart = [
+                browserCart,
+                cartObj
+            ].flat()
+            const fiveDays = 1000 * 60 * 60 * 24 * 5;
+            res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+            return res.status(200).json({msg:"Successfully added the product to cart"})
+    }
+
+    const userCart = user[0].cartItems;
+    //If empty
+    if(userCart.length === 0)
+    {
+        await User.findByIdAndUpdate({_id:user[0].id},{cartItems:[cartObj]});
+        return res.status(200).json({ms:"Sucessfully added the product to cart"})
+    }
+    //If not empty
+    for(const item of user[0].cartItems)
+    {
+        if(compareArrays(item.ingredients,ingr) && item.id === product.id)
+        return res.status(400).json({msg:"Product already in cart"});
+    }
+
+    const newCart = [
+        user[0].cartItems,
+        cartObj
+    ].flat()
+
+    await User.findByIdAndUpdate({_id:user[0].id},{cartItems:newCart});
+    return res.status(200).json({ms:"Sucessfully added the product to cart"})
+        
     } catch (error) {
+        console.log(error)
         throw new CustomAPIError("Something went wrong while adding to cart",500)
 
     }
-
-  
 }
 
 //Cart items 
@@ -280,34 +356,36 @@ const cartItems = async(req,res) =>{
    if(!cart)
    throw new CustomAPIError("Cart is empty",404);
 
-   const ids = cart.map((item) =>{
-    return item.id
-   })
+   res.status(200).json(cart)
 
-   try {
-    let cartItems = []
-    let total_price = 0
-    const products = await Product.find({_id:{$in:ids}});
-    products.map((item,index) =>{
-        const cartObject = {
-            id:item.id,
-            title:item.title,
-            price:cart[index].price,
-            ingredients:cart[index].ingredients,
-            images:item.images,
-            size:cart[index].size,
-            qty:cart[index].qty
-        }
-        cartItems.push(cartObject)
-        total_price += cart[index].price
-    })
+//    const ids = cart.map((item) =>{
+//     return item.id
+//    })
 
-    res.status(200).json({cart:cartItems,total_price:total_price})
+//    try {
+//     let cartItems = []
+//     let total_price = 0
+//     const products = await Product.find({_id:{$in:ids}});
+//     products.map((item,index) =>{
+//         const cartObject = {
+//             id:item.id,
+//             title:item.title,
+//             price:cart[index].price,
+//             ingredients:cart[index].ingredients,
+//             images:item.images,
+//             size:cart[index].size,
+//             qty:cart[index].qty
+//         }
+//         cartItems.push(cartObject)
+//         total_price += cart[index].price
+//     })
+
+//     res.status(200).json({cart:cartItems,total_price:total_price})
 
 
-   } catch (error) {
-        throw new CustomAPIError("Something went wrong",500);
-   }
+//    } catch (error) {
+//         throw new CustomAPIError("Something went wrong",500);
+//    }
 
 }
 

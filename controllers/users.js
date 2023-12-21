@@ -355,7 +355,6 @@ const cartItems = async(req,res) =>{
    const isSigned = req.user ? true : false;
    const cart = !isSigned ? req.cookies.cart : user[0].cartItems;
    let total_price = 0;
-   let increaseFactor = 0
    let cartItems = [];
 
     if(!cart)   
@@ -369,13 +368,27 @@ const cartItems = async(req,res) =>{
     try {
         const products = await Product.find({_id:{$in:[ids]}});
         products.forEach((item,index) =>{
-            console.log(cart[index].ingredients)
+
+            let increaseFactor = 0
+            cart[index].ingredients.forEach((item) =>{
+                item.endsWith('+') ?  increaseFactor += 7 : ''
+            })
+
             const cartObj = {
                 id:item.id,
                 title:item.title,
-
+                price: (item.price + increaseFactor + ((cart[index].size - 150) * item.price_per_unit)) * cart[index].qty,
+                ingredients:cart[index].ingredients,
+                images:item.images,
+                size:cart[index].size,
+                qty:cart[index].qty
             }
+            total_price += cartObj.price
+            cartItems.push(cartObj)
         })
+
+        res.status(200).json({cart:cartItems,total_price:total_price})
+
     } catch (error) {
         console.console.log(error)
         throw new CustomAPIError("Something went wrong",500);

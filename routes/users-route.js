@@ -32,7 +32,7 @@ router.route('/logout').post(logout)
 router.route('/verify').post(requiredAuth,verify);
 router.route('/send-msg').post(getBotRespond);
 router.route('/add-to-cart').post(isAuth,addToCart)
-router.route('/cart-items').get(cartItems)
+router.route('/cart-items').get(isAuth,cartItems)
 router.route('/clear-cart').get(clearCart)
 router.route('/make-order').post(requiredAuth,makeOrder);
 router.route('/remove-from-cart').post(removeFromCart),

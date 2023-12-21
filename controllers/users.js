@@ -351,12 +351,38 @@ const addToCart = async(req,res) =>{
 //Cart items 
 
 const cartItems = async(req,res) =>{
-   const cart = req.cookies.cart;
+   const user = req.user;
+   const isSigned = req.user ? true : false;
+   const cart = !isSigned ? req.cookies.cart : user[0].cartItems;
+   let total_price = 0;
+   let increaseFactor = 0
+   let cartItems = [];
 
-   if(!cart)
-   throw new CustomAPIError("Cart is empty",404);
+    if(!cart)   
+    throw new CustomAPIError("Cart is empty",404);
 
-   res.status(200).json(cart)
+    const ids = cart.map((item) =>{
+        return item.id
+    });
+
+
+    try {
+        const products = await Product.find({_id:{$in:[ids]}});
+        products.forEach((item,index) =>{
+            console.log(cart[index].ingredients)
+            const cartObj = {
+                id:item.id,
+                title:item.title,
+
+            }
+        })
+    } catch (error) {
+        console.console.log(error)
+        throw new CustomAPIError("Something went wrong",500);
+    }
+
+
+//    res.status(200).json(cart)
 
 //    const ids = cart.map((item) =>{
 //     return item.id

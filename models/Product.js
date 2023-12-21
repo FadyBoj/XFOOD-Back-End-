@@ -22,9 +22,9 @@ const Product = new mongoose.Schema({
         type:Number,
         required:true,
     },
-    main_unit:{
+    main_ingredient:{
         type:String,
-        required:true,
+        required:false,
     },
     ingredients:{
         type:Array,

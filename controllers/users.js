@@ -469,7 +469,7 @@ const clearCart = async(req,res) =>{
         const fiveDays = 1000 * 60 * 60 * 24 * 5;
         isSigned ? 
         await User.findOneAndUpdate({_id:user[0].id},{cartItems:[]}):
-        res.clearCookie('cart',{secure:true,httpOnly,sameSite:'None',maxAge:fiveDays});
+        res.clearCookie('cart',{secure:true,httpOnly:true,sameSite:'None',maxAge:fiveDays});
 
         res.status(200).json({msg:"Cart items deleted"})
 

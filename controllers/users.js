@@ -361,6 +361,9 @@ const cartItems = async(req,res) =>{
     if(!cart)   
     throw new CustomAPIError("Cart is empty",404);
 
+    if(cart.length === 0)
+    throw new CustomAPIError("Cart is already empty",400);
+
     const ids = cart.map((item) =>{
         return item.id
     });
@@ -389,7 +392,6 @@ const cartItems = async(req,res) =>{
                 size:cart[index].size,
                 qty:cart[index].qty
             }
-            console.log(cartObj)
             total_price += cartObj.price
             cartItems.push(cartObj)
         })
@@ -401,61 +403,76 @@ const cartItems = async(req,res) =>{
         throw new CustomAPIError("Something went wrong",500);
     }
 
-
-//    res.status(200).json(cart)
-
-//    const ids = cart.map((item) =>{
-//     return item.id
-//    })
-
-//    try {
-//     let cartItems = []
-//     let total_price = 0
-//     const products = await Product.find({_id:{$in:ids}});
-//     products.map((item,index) =>{
-//         const cartObject = {
-//             id:item.id,
-//             title:item.title,
-//             price:cart[index].price,
-//             ingredients:cart[index].ingredients,
-//             images:item.images,
-//             size:cart[index].size,
-//             qty:cart[index].qty
-//         }
-//         cartItems.push(cartObject)
-//         total_price += cart[index].price
-//     })
-
-//     res.status(200).json({cart:cartItems,total_price:total_price})
-
-
-//    } catch (error) {
-//         throw new CustomAPIError("Something went wrong",500);
-//    }
-
 }
 
 
 const removeFromCart = async(req,res) =>{
-    const { id } = req.body;
-    console.log(id)
-    try {
-        
-        const cart = req.cookies.cart;
-        const updatedCart = cart.filter(item => item.id != id );
-        const fiveDays = 1000 * 60 * 60 * 24 * 5;
-        res.cookie('cart',updatedCart,{secure:true,sameSite:'None',maxAge:fiveDays});
-        res.status(200).json({msg:`Product with id ${id} has been removed`})
-    } catch (error) {
-        console.log(error)
-    }
+    const { id, ingredients } = req.body;
+    const user = req.user;
+    const isSigned = user ? true : false;
+    const cart = user ? user[0].cartItems : req.cookies.cart;
+
+    if(!cart)
+    throw new CustomAPIError("Cart is empty",404);
+
+    if(!id || !ingredients)
+    throw new CustomAPIError("Product id and ingredients must be provided",400);
+
+        try {
+            if(cart.length === 1)
+            {
+                isSigned ?
+                await User.findOneAndUpdate({_id:user[0].id},{cartItems:[]}) :
+                res.clearCookie('cart',{secure:true,sameSite:'None'});
+
+                return res.status(200).json({msg:`Product with id: ${id} has been removed from cart`});
+            }
+
+            const newCart = cart.map((item) =>{
+                return item.id === id && compareArrays(item.ingredients,ingredients) ? null : item
+            }).filter(item => item != null)
+
+            const fiveDays = 1000 * 60 * 60 * 24 * 5;
+
+            isSigned ?
+            await User.findOneAndUpdate({_id:user[0].id},{cartItems:newCart}) :
+            res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+
+
+            return res.status(200).json({msg:`Product with id: ${id} has been removed from cart`});
+            
+        } catch (error) {
+            console.log(error)
+            throw new CustomAPIError("Something went wrong while removing product from cart",500)
+        }
+
 }
 
 //Clear cart
 
 const clearCart = async(req,res) =>{
-    res.clearCookie('cart');
-    res.status(200).json({msg:"Cart items deleted"})
+    const user = req.user;
+    const isSigned = user ? true : false;
+    const cart = user ? user[0].cartItems : req.cookies.cart;
+
+    if(!cart)
+    throw new CustomAPIError("Cart is already empty",400);
+
+    if(cart.length === 0)
+    throw new CustomAPIError("Cart is already empty",400);
+
+    try {
+        isSigned ? 
+        await User.findOneAndUpdate({_id:user[0].id},{cartItems:[]}):
+        res.clearCookie('cart');
+
+        res.status(200).json({msg:"Cart items deleted"})
+
+    } catch (error) {
+        throw new CustomAPIError("Something went wrog while clearing your cart",500);
+    }
+
+    
 }
 
 // Make order

@@ -142,6 +142,7 @@ const addProduct = async(req,res) =>{
 //Update product
 
 const updateProduct = async(req,res) =>{
+    try {
     const { id, title, description, price, category, ingredients } = req.body; 
     const files = req.files;
     let imagesUrl = [];
@@ -151,7 +152,7 @@ const updateProduct = async(req,res) =>{
 
     //Removing old images
 
-    if(files.length > 0)
+    if(files && files.length > 0)
     {
     await Promise.all(
       
@@ -215,12 +216,17 @@ const updateProduct = async(req,res) =>{
 
     // Updating the product
     try {
-        await Product.findOneAndUpdate({_id:id},queryObject);
-        res.status(200).json({msg:"Successfullt updated the product"})
+        const up = await Product.findOneAndUpdate({_id:id},queryObject);
+        console.log(up)
+        res.status(200).json({msg:up ?"Successfully updated the product": "Nothing has been updated"})
     } catch (error) {
         console.log(error)
         throw new CustomAPIError("Something went wrong while updating the product",500);
     }
+    } catch (error) {
+        console.log(error)
+    }
+    
 
 }
 

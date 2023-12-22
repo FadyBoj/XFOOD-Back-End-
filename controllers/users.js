@@ -265,7 +265,8 @@ const addToCart = async(req,res) =>{
 
             if(key.startsWith('extra') && ingredients_titles.includes(key.split('-')[1]))
             {
-                if(ingredients_qtys[key.split('-')[1]] < 100)
+                console.log(`Wanted : ${60 * productQuantity}, Exist : ${ingredients_qtys[key.split('-')[1]]}`)
+                if(60 * productQuantity > ingredients_qtys[key.split('-')[1]])
                 return res.status(400).json({msg:"Out of stock"})
 
                 ingr.push(`${key.split('-')[1]}+`);
@@ -277,7 +278,8 @@ const addToCart = async(req,res) =>{
 
             if(ingredients_titles.includes(key) && !temp_extra.includes(key))
             {   
-                if(ingredients_qtys[key] < 100)
+                console.log(`Wanted : ${30 * productQuantity}, Exist : ${ingredients_qtys[key]}`)
+                if(30 * productQuantity > ingredients_qtys[key])
                 return res.status(400).json({msg:"Out of stock"})
                 ingr.push(key)
             } 
@@ -530,13 +532,21 @@ const makeOrder = async(req,res) =>{
             formatted_ingredients.forEach((item) =>{
                 const cleanItem = item.split('+')[0];
                 ingredients_to_discount = {...ingredients_to_discount,
-                [cleanItem]:ingredients_to_discount[cleanItem] ? ingredients_to_discount[cleanItem] + item.endsWith('+') ? 60 : 30:
-                item.endsWith('+') ? 60 : 30
+                [cleanItem]:ingredients_to_discount[cleanItem] ? ingredients_to_discount[cleanItem] + ((item.endsWith('+') ? 60 : 30) * qty):
+                (item.endsWith('+') ? 60 : 30) * qty
                 }
 
               if(ingredients_titles.includes(item.split('+')[0]) && item.endsWith('+'))
                  increaseFactor += ingredients_prices[item.split('+')[0]];
             })
+
+
+            product.category === 'burger' ? ingredients_to_discount = {...ingredients_to_discount,
+                meat:ingredients_to_discount['meat'] ? ingredients_to_discount['meat'] + size * qty : size * qty
+                }:
+                product.category === 'chicken' ? ingredients_to_discount = {...ingredients_to_discount,
+                chicken:ingredients_to_discount['chicken'] ? ingredients_to_discount['chicken'] + size * qty : size * qty
+                } : ''
 
 
             const productPrice = (product.price + increaseFactor + ((size - 150) * product.price_per_unit)) * qty;
@@ -551,97 +561,40 @@ const makeOrder = async(req,res) =>{
             total_price += productPrice
         }
 
-        console.log(ingredients_to_discount)
+        for (item in ingredients_to_discount)
+        {
+            const itemQty = ingredients_qtys[item];
+            const newQty = itemQty - ingredients_to_discount[item];
+            if(newQty <= 0)
+            return res.status(400).json({msg:"Out of stock"});
+
+            await Ingredient.findOneAndUpdate({title:item},{quantity:newQty});
+        }
+        
+        await Order.create({
+            title:`${user.firstname}'s Order`,
+            items:orderItems,
+            userID:user.id,
+            total_price:total_price,
+            address:user.address[0],
+            payment_type:'Cash on delivery',
+            status:'Waiting'
+        })
+
+        await User.findOneAndUpdate({_id:user.id},{cartItems:[]});
+        res.status(200).json({msg:"Successfully added your order"});
+
         
     } catch (error) {
         console.log(error)
+        throw new CustomAPIError("Something went wrong while adding your order")
     }
     
 
 }
 
 
-// const makeOrder = async(req,res) =>{
-//     const cart = req.cookies.cart;
-//     const user = req.user
-//     if(!cart)
-//     throw new CustomAPIError("Cart is empty",400);
-//     console.log(cart)
-
-//     try {
-//         let ingredientsToDiscount = {}
-//         let ingredientsToDiscountTitles = []
-//         let ingredientsToDiscountValues = []
-//         let total_price = 0
-
-//         let cartIngredients = []
-
-//         const ingredients = await Ingredient.find({});
-//         const ingredients_titles = ingredients.map((item) =>{
-//             return item.title
-//         })
-
-//         cart.map((item) =>{
-//             total_price += item.price
-//             item.ingredients.map((ingr) =>{
-//                 if(ingr.endsWith('+'))
-//                 {
-//                     cartIngredients.push(ingr.split('+')[0])
-//                     cartIngredients.push(ingr.split('+')[0])
-//                 }
-//                 else{
-//                     cartIngredients.push(ingr.split('+')[0])
-//                 }
-//             })
-//         })
-
-//         cartIngredients.map((item) =>{
-//            ingredientsToDiscount = {...ingredientsToDiscount,[item]:ingredientsToDiscount[item] ?
-//            ingredientsToDiscount[item] + 30 : 30
-//             }
-//         })
-
-//         for(key in ingredientsToDiscount)
-//         {
-//             ingredientsToDiscountTitles.push(key)
-//             ingredientsToDiscountValues.push(ingredientsToDiscount[key])
-
-//             ingredients.map((item) =>{
-//                 if(item.title === key )
-//                  ingredientsToDiscount[key] = (item.quantity - ingredientsToDiscount[key])
-//             })
-//         }        
-
-//         console.log(ingredientsToDiscount)
-
-
-//         for (key in ingredientsToDiscount)
-//         {
-//             await Ingredient.findOneAndUpdate({title:key},{quantity:ingredientsToDiscount[key]})
-//         }
-
-//         console.log(total_price)
-
-//         const createdOrder = await Order.create({
-//             title:`${user.firstname}'s Order`,
-//             items:cart,
-//             userID:user.id,
-//             address:user.address[0],
-//             total_price:total_price,
-//         })
-
-
-//         await User.findOneAndUpdate({_id:user.id},{previousOrders:[user.previousOrders,createdOrder].flat()})
-
-//         res.status(200).json({msg:"Success"})
-
-//     } catch (error) {
-//         console.log(error)
-//     }
-
-// }
-
-
+ 
 
 //Logout
 
@@ -671,6 +624,82 @@ const createPay = ( payment ) => {
 
 const payment  = async ( req , res ) => {
     try {
+    const user = req.user
+    const cart = user.cartItems;
+
+    if(!user.verified)
+    return res.status(400).json({msg:"Please verify your account first to make orders"});
+
+    if(cart.length === 0)
+    return res.status(400).json({msg:"Your cart is empty"});
+
+    let ingredients_titles = [];
+        let ingredients_qtys = {};
+        let ingredients_prices = {};
+        let ingredients_to_discount = {};
+        let orderItems = [];
+        let total_price = 0;
+
+        const ingredientsDB = await Ingredient.find({});
+
+        ingredientsDB.forEach((item) =>{
+            ingredients_titles.push(item.title);
+            ingredients_qtys = {...ingredients_qtys,[item.title]:item.quantity};
+            ingredients_prices = {...ingredients_prices,[item.title]:item.price};
+        })
+
+
+
+        for(item of cart)
+        {
+            const { id, size, qty, ingredients } = item;
+            let increaseFactor = 0
+            let formatted_ingredients = [];
+
+            if(!id || !size || !qty || !ingredients)
+            return res.status(400).json("A product has some missing information");
+
+            const product = await Product.findById(id);
+
+            formatted_ingredients = ingredients.map((item) =>{
+                return ingredients_titles.includes(item.split('+')[0]) ? item : null
+            }).filter(item => item != null)
+
+
+            formatted_ingredients.forEach((item) =>{
+                const cleanItem = item.split('+')[0];
+                ingredients_to_discount = {...ingredients_to_discount,
+                [cleanItem]:ingredients_to_discount[cleanItem] ? ingredients_to_discount[cleanItem] + ((item.endsWith('+') ? 60 : 30) * qty):
+                (item.endsWith('+') ? 60 : 30) * qty
+                }
+
+              if(ingredients_titles.includes(item.split('+')[0]) && item.endsWith('+'))
+                 increaseFactor += ingredients_prices[item.split('+')[0]];
+            })
+
+
+            product.category === 'burger' ? ingredients_to_discount = {...ingredients_to_discount,
+                meat:ingredients_to_discount['meat'] ? ingredients_to_discount['meat'] + size * qty : size * qty
+                }:
+                product.category === 'chicken' ? ingredients_to_discount = {...ingredients_to_discount,
+                chicken:ingredients_to_discount['chicken'] ? ingredients_to_discount['chicken'] + size * qty : size * qty
+                } : ''
+
+
+            const productPrice = (product.price + increaseFactor + ((size - 150) * product.price_per_unit)) * qty;
+             orderItems.push({
+                title:product.title,
+                quantity:qty,
+                size:size,
+                ingredients:formatted_ingredients || [],
+                default_price:product.price,
+                product_total_price:productPrice
+            })
+            total_price += productPrice
+        }
+
+        console.log(total_price)
+
         const paymenT = {
             "intent": "authorize",
 	"payer": {
@@ -682,7 +711,7 @@ const payment  = async ( req , res ) => {
 	},
 	"transactions": [{
 		"amount": {
-			"total": 39.00,
+			"total": total_price,
 			"currency": "USD"
 		},
 		"description": " a book on mean stack "

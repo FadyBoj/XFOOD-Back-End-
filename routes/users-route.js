@@ -36,7 +36,7 @@ router.route('/cart-items').get(isAuth,cartItems)
 router.route('/clear-cart').get(isAuth,clearCart)
 router.route('/make-order').post(requiredAuth,makeOrder);
 router.route('/remove-from-cart').post(isAuth,removeFromCart),
-router.route('/payment').get(payment)
+router.route('/payment').get(requiredAuth,payment)
 
 
 

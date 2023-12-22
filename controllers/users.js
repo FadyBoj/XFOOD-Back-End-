@@ -339,10 +339,19 @@ const addToCart = async(req,res) =>{
         return res.status(200).json({ms:"Sucessfully added the product to cart"})
     }
     //If not empty
+    let i = 0
     for(const item of user[0].cartItems)
     {
         if(compareArrays(item.ingredients,ingr) && item.id === product.id)
-        return res.status(400).json({msg:"Product already in cart"});
+        {
+            const testCart = userCart.map((newItem,index) =>{
+                return index === i ? {...newItem,qty:newItem['qty'] + 1} : newItem
+           })
+
+           await User.findByIdAndUpdate({_id:user[0].id},{cartItems:testCart});
+           return res.status(400).json({msg:"Product quantity increased"});
+        }
+        i++
     }
 
     const newCart = [

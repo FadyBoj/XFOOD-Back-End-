@@ -527,8 +527,13 @@ const makeOrder = async(req,res) =>{
             }).filter(item => item != null)
 
 
-
             formatted_ingredients.forEach((item) =>{
+                const cleanItem = item.split('+')[0];
+                ingredients_to_discount = {...ingredients_to_discount,
+                [cleanItem]:ingredients_to_discount[cleanItem] ? ingredients_to_discount[cleanItem] + item.endsWith('+') ? 60 : 30:
+                item.endsWith('+') ? 60 : 30
+                }
+
               if(ingredients_titles.includes(item.split('+')[0]) && item.endsWith('+'))
                  increaseFactor += ingredients_prices[item.split('+')[0]];
             })
@@ -546,7 +551,7 @@ const makeOrder = async(req,res) =>{
             total_price += productPrice
         }
 
-
+        console.log(ingredients_to_discount)
         
     } catch (error) {
         console.log(error)

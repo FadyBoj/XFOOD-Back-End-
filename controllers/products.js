@@ -30,6 +30,22 @@ const getProducts = async(req,res) =>{
     }
 }
 
+const singleProduct = async(req,res) =>{
+    const { id } = req.params;
+    console.log(id)
+
+    try {
+        const product = await Product.find({_id:id});
+        if(product.length === 0)
+        return res.status(404).json({msg:"Not found"})
+    
+        res.status(200).json(product[0])
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500);
+    }
+}
+
 module.exports = {
     getProducts,
+    singleProduct
 }

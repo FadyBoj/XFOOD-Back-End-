@@ -288,7 +288,7 @@ const addToCart = async(req,res) =>{
         }
         
 
-       const cartObj = {
+       let cartObj = {
         id:product.id,
         size:size,
         qty:productQuantity,
@@ -307,10 +307,19 @@ const addToCart = async(req,res) =>{
                 return res.status(200).json({msg:"Successfully added the product to cart"})
             }
             //If not empty
+            let i = 0;
             for(const item of browserCart)
             {
-                if(compareArrays(item.ingredients,ingr) && item.id === product.id)
-                return res.status(400).json({msg:"Product already in cart"});
+                if(compareArrays(item.ingredients,ingr) && item.id === product.id){
+                    const testCart = browserCart.map((newItem,index) =>{
+                         return index === i ? {...newItem,qty:newItem['qty'] + 1} : newItem
+                    })
+                    console.log(testCart)
+                    const fiveDays = 1000 * 60 * 60 * 24 * 5;
+                    res.cookie('cart',testCart,{httpOnly:true,secure:true,sameSite:'None',maxAge:fiveDays});
+                    return res.status(400).json({msg:"Product quantity increased"});
+                }
+                i++;
             }
 
             const newCart = [

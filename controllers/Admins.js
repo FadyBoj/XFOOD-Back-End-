@@ -121,7 +121,7 @@ const addProduct = async(req,res) =>{
             title:title,
             description:description,
             price:price,
-            ingredients:JSON.parse(ingredients),
+            ingredients: ingredients ? JSON.parse(ingredients) : [],
             images:imagesUrl,
             category:category.toLowerCase(),
             unit:unit.toLowerCase(),

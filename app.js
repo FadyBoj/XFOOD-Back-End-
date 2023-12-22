@@ -72,7 +72,6 @@ setInterval(async() =>{
         const { data } = await axios.get('https://xfood.onrender.com/self-ping');
         
     } catch (error) {
-        console.log(error)
     }
 
 

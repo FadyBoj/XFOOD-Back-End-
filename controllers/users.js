@@ -61,7 +61,7 @@ const createAccount = async(req,res) =>{
 
              const oneDay = 1000 * 60 * 60 * 24;
              const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
-             res.cookie('jwtToken',token,{secure:true,sameSite:'None',maxAge:oneDay});
+             res.cookie('jwtToken',token,{httpOnly:true,secure:true,sameSite:'None',maxAge:oneDay});
              res.status(200).json({msg:"successfully created your account"})
         } catch (error) {
             console.log(error)
@@ -109,7 +109,7 @@ const login = async(req,res) =>{
                 }
                 const oneDay = 1000 * 60 * 60 * 24;
                 const token = jwt.sign(data,process.env.JWT_SECRET,{expiresIn:'1d'});
-                res.cookie('jwtToken',token,{secure:true,sameSite:'None',maxAge:oneDay});
+                res.cookie('jwtToken',token,{httpOnly:true,secure:true,sameSite:'None',maxAge:oneDay});
                 res.status(200).json({msg:"Successfully logged in"});
                } catch (error) {
                 console.log(error   )
@@ -167,7 +167,7 @@ const mobileLogin = async(req,res) =>{
 // check Auth
 
 const checkAuth = async(req,res) =>{
-    const token = req.cookies.jwtToken;
+    const token = req.cookies.jwtToken || req.headers.authorization;
     
     if(!token)
     throw new CustomAPIError("Not authorized",401);
@@ -301,7 +301,7 @@ const addToCart = async(req,res) =>{
             if(!browserCart)
             {
                 const fiveDays = 1000 * 60 * 60 * 24 * 5;
-                res.cookie('cart',[cartObj],{secure:true,sameSite:'None',maxAge:fiveDays});
+                res.cookie('cart',[cartObj],{httpOnly:true,secure:true,sameSite:'None',maxAge:fiveDays});
                 return res.status(200).json({msg:"Successfully added the product to cart"})
             }
             //If not empty
@@ -316,7 +316,7 @@ const addToCart = async(req,res) =>{
                 cartObj
             ].flat()
             const fiveDays = 1000 * 60 * 60 * 24 * 5;
-            res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+            res.cookie('cart',newCart,{httpOnly:true,secure:true,sameSite:'None',maxAge:fiveDays});
             return res.status(200).json({msg:"Successfully added the product to cart"})
     }
 
@@ -364,10 +364,13 @@ const cartItems = async(req,res) =>{
     if(cart.length === 0)
     throw new CustomAPIError("Cart is already empty",400);
 
-    const ids = cart.map((item) =>{
-        return item.id
-    });
+     let ingredients_prices = {};
+ 
+    const ingredientsDB = await Ingredient.find({});
 
+    ingredientsDB.forEach((item) =>{
+         ingredients_prices = {...ingredients_prices,[item.title]:item.price};
+    })
 
     try {
         let products = []
@@ -380,7 +383,8 @@ const cartItems = async(req,res) =>{
 
             let increaseFactor = 0
             cart[index].ingredients.forEach((item) =>{
-                item.endsWith('+') ?  increaseFactor += 7 : ''
+                if(item.endsWith('+'))
+                increaseFactor += ingredients_prices[item.split('+')[0]];
             })
 
             const cartObj = {
@@ -436,7 +440,7 @@ const removeFromCart = async(req,res) =>{
 
             isSigned ?
             await User.findOneAndUpdate({_id:user[0].id},{cartItems:newCart}) :
-            res.cookie('cart',newCart,{secure:true,sameSite:'None',maxAge:fiveDays});
+            res.cookie('cart',newCart,{httpOnly:true,secure:true,sameSite:'None',maxAge:fiveDays});
 
 
             return res.status(200).json({msg:`Product with id: ${id} has been removed from cart`});
@@ -479,7 +483,75 @@ const clearCart = async(req,res) =>{
 
 
 const makeOrder = async(req,res) =>{
-    console.log(req.user)
+    const user = req.user
+    const cart = user.cartItems;
+
+    if(!user.verified)
+    throw new CustomAPIError("Please verify your account first to make orders",400);
+
+    if(cart.length === 0)
+    throw new CustomAPIError("Your cart is empty",400);
+
+    try {
+        let ingredients_titles = [];
+        let ingredients_qtys = {};
+        let ingredients_prices = {};
+        let ingredients_to_discount = {};
+        let orderItems = [];
+        let total_price = 0;
+
+        const ingredientsDB = await Ingredient.find({});
+
+        ingredientsDB.forEach((item) =>{
+            ingredients_titles.push(item.title);
+            ingredients_qtys = {...ingredients_qtys,[item.title]:item.quantity};
+            ingredients_prices = {...ingredients_prices,[item.title]:item.price};
+        })
+
+
+
+        for(item of cart)
+        {
+            const { id, size, qty, ingredients } = item;
+            let increaseFactor = 0
+            let formatted_ingredients = [];
+
+            if(!id || !size || !qty || !ingredients)
+            return res.status(400).json("A product has some missing information");
+
+            const product = await Product.findById(id);
+
+            formatted_ingredients = ingredients.map((item) =>{
+                return ingredients_titles.includes(item.split('+')[0]) ? item : null
+            }).filter(item => item != null)
+
+
+
+            formatted_ingredients.forEach((item) =>{
+              if(ingredients_titles.includes(item.split('+')[0]) && item.endsWith('+'))
+                 increaseFactor += ingredients_prices[item.split('+')[0]];
+            })
+
+
+            const productPrice = (product.price + increaseFactor + ((size - 150) * product.price_per_unit)) * qty;
+             orderItems.push({
+                title:product.title,
+                quantity:qty,
+                size:size,
+                ingredients:formatted_ingredients || [],
+                default_price:product.price,
+                product_total_price:productPrice
+            })
+            total_price += productPrice
+        }
+
+
+        
+    } catch (error) {
+        console.log(error)
+    }
+    
+
 }
 
 

@@ -10,7 +10,6 @@ const requiredAuth = async(req,res,next) =>{
     if(!token)
     throw new CustomAPIError("No token provided",401);
 
-    console.log(token)
 
     try {
         const decoded = jwt.verify(token,process.env.JWT_SECRET);

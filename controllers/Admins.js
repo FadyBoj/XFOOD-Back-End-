@@ -319,6 +319,35 @@ const viewOrders = async(req,res) =>{
 
 }
 
+const change_order_status = async(req,res) =>{
+    const { orderId, orderStatus } = req.body;
+    const user = req.user;
+    const userRole = user.role.toLowerCase();
+    const systemRoles = ['employee','manager']; 
+    const validStatus = ['preparing','cancelled','out to delivery','delivered']
+
+    if(!systemRoles.includes(userRole))
+    throw new CustomAPIError("Forbidden",403);
+
+    if(!orderId || !orderStatus)
+    throw new CustomAPIError("Order id and status must be provided",400);
+
+    if(!validStatus.includes(orderStatus.toLowerCase()))
+    throw new CustomAPIError("Please provide a valid status",400);
+
+    try {
+
+        const updatedOrder = await Order.findByIdAndUpdate({_id:orderId},{status:orderStatus.toLowerCase()});
+        res.status(200).json({msg:`Successfully changed order ${updatedOrder.id} to ${orderStatus}`});
+        
+    } catch (error) {
+        throw new CustomAPIError("Order not found",400)
+    }
+
+
+
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
@@ -327,5 +356,7 @@ module.exports = {
     updateProduct,
     deleteProduct,
     addOffer,
-    viewOrders
+    viewOrders,
+    change_order_status
+
 }

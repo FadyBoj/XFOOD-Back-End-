@@ -18,6 +18,10 @@ const Order = new mongoose.Schema({
         type:String,
         required:true
     },
+    deliveryID:{
+        type:String,
+        required:false
+    },
     total_price:{
         type:Number,
         required:true,
@@ -33,7 +37,8 @@ const Order = new mongoose.Schema({
     status:{
         type:String,
         required:true
-    }
+    },
+
 
 })
 

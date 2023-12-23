@@ -11,7 +11,8 @@ const {
     addProduct,
     updateProduct,
     deleteProduct,
-    addOffer
+    addOffer,
+    viewOrders
 } = require('../controllers/Admins');   
 
 //middleware
@@ -26,6 +27,7 @@ router.route('/add-product').post(adminAuthorization,upload.array('images'),addP
 router.route('/update-product').patch(adminAuthorization,upload.array('images'),updateProduct);
 router.route('/delete-product').delete(adminAuthorization,deleteProduct);
 router.route('/add-offer').post(adminAuthorization,upload.single('images'),addOffer);
+router.route('/orders').get(adminAuthorization,viewOrders);
 
 
 //Products route

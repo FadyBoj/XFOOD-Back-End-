@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Ingredient = require('../models/Ingredient');
 const Offer = require('../models/offer');
+const Order = require('../models/Order');
 const CustomAPIError = require('../error/CustomAPIError');
 const { readFileSync,writeFileSync, unlinkSync, readdirSync} = require('fs');
 const path = require('path');
@@ -298,6 +299,26 @@ const addOffer = async(req,res) =>{
 
 }
 
+
+const viewOrders = async(req,res) =>{
+
+    const user = req.user;
+    const userRole = user.role.toLowerCase();
+    const systemRoles = ['employee','manager']; 
+
+    if(!systemRoles.includes(userRole))
+    throw new CustomAPIError("Forbidden",403)
+
+
+    try {
+        const orders = await Order.find({});
+        res.status(200).json(orders);
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500)
+    }
+
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
@@ -305,5 +326,6 @@ module.exports = {
     addProduct,
     updateProduct,
     deleteProduct,
-    addOffer
+    addOffer,
+    viewOrders
 }

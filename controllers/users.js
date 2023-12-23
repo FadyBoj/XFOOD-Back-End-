@@ -233,7 +233,6 @@ const verify = async (req,res) =>{
 const addToCart = async(req,res) =>{
     try {
 
-
         const {productId, productQuantity, size, extras} = req.body;
 
         if(!productId || !productQuantity || !size || !extras)
@@ -314,7 +313,6 @@ const addToCart = async(req,res) =>{
                     const testCart = browserCart.map((newItem,index) =>{
                          return index === i ? {...newItem,qty:newItem['qty'] + 1} : newItem
                     })
-                    console.log(testCart)
                     const fiveDays = 1000 * 60 * 60 * 24 * 5;
                     res.cookie('cart',testCart,{httpOnly:true,secure:true,sameSite:'None',maxAge:fiveDays});
                     return res.status(400).json({msg:"Product quantity increased"});
@@ -590,7 +588,7 @@ const makeOrder = async(req,res) =>{
         }
         
         await Order.create({
-            title:`${user.firstname}'s Order`,
+            customer_name:user.firstname,
             items:orderItems,
             userID:user.id,
             total_price:total_price,

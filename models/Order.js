@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const Order = new mongoose.Schema({
-    title:{
+    customer_name:{
         type:String,
         required:true
     },
@@ -9,7 +9,7 @@ const Order = new mongoose.Schema({
         type:Array,
         required:true
     },
-    createdAt:{
+    date:{
         type:Date,
         required:true,
         default:Date.now()

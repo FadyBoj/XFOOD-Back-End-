@@ -231,6 +231,7 @@ const verify = async (req,res) =>{
 
 
 const addToCart = async(req,res) =>{
+    console.log(req.body)
     try {
 
         const {productId, productQuantity, size, extras} = req.body;

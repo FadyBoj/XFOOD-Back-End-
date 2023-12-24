@@ -7,6 +7,7 @@ const { readFileSync,writeFileSync, unlinkSync, readdirSync} = require('fs');
 const path = require('path');
 const rootDirectory = path.dirname(require.main.filename);
 const  cloudinary = require('cloudinary');
+const User = require('../models/User');
 require('dotenv').config();
 
 //Cloudinary config 
@@ -360,9 +361,41 @@ const change_order_status = async(req,res) =>{
     } catch (error) {
         throw new CustomAPIError("Order not found",400)
     }
+}
+
+const addEmployee = async(req,res) =>{
+    const { First_name, Last_name, Role, Email_address, Password } = req.body;
+    const user = req.user;
+    const userRole = user.role.toLowerCase();
+    const systemRoles = ['employee','delivery'];
+    const forbiddenRoles = ['manager']; 
+
+    if(userRole !== 'manager')
+    throw new CustomAPIError("Forbidden",403);
+
+    if (!First_name || !Last_name || !Role || !Email_address || !Password)
+    throw new CustomAPIError("Please provide all employee information",400);
+
+    if(!systemRoles.includes(Role.toLowerCase()))
+    throw new CustomAPIError("Please provide a valid role",400);
+
+    if(forbiddenRoles.includes(Role.toLowerCase()))
+    throw new CustomAPIError("You can't assign the role to be manager",400);
 
 
+    try {
+        await User.create({
+            firstname:First_name,
+            lastname:Last_name,
+            email:Email_address,
+            password:Password,
+            admin:true,
+            role:Role.toLowerCase(),
 
+        })
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500)
+    }
 }
 
 module.exports = {
@@ -375,6 +408,7 @@ module.exports = {
     addOffer,
     viewOrders,
     change_order_status,
-    deliveryOrders
+    deliveryOrders,
+    addEmployee
 
 }

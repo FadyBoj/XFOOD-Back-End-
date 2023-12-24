@@ -23,7 +23,7 @@ const User = new mongoose.Schema({
     },
     age:{
         type:Number,
-        required:true
+        required:false
     },
     cartItems:{
         type:Array,

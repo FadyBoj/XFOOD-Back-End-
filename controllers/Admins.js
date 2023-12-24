@@ -8,6 +8,7 @@ const path = require('path');
 const rootDirectory = path.dirname(require.main.filename);
 const  cloudinary = require('cloudinary');
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 //Cloudinary config 
@@ -384,16 +385,26 @@ const addEmployee = async(req,res) =>{
 
 
     try {
+
+        const checkUser = await User.find({email:Email_address.toLowerCase()});
+        if (checkUser.length > 0)
+        return res.status(400).json({msg:"This email is taken"})
+
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(Password,salt);
+
         await User.create({
             firstname:First_name,
             lastname:Last_name,
-            email:Email_address,
-            password:Password,
+            email:Email_address.toLowerCase(),
+            password:hash,
             admin:true,
             role:Role.toLowerCase(),
 
         })
+        res.status(200).json({msg:"Successfully created employee account"})
     } catch (error) {
+        console.log(error)
         throw new CustomAPIError("Something went wrong",500)
     }
 }

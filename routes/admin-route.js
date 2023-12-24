@@ -13,7 +13,8 @@ const {
     deleteProduct,
     addOffer,
     viewOrders,
-    change_order_status
+    change_order_status,
+    deliveryOrders
 } = require('../controllers/Admins');   
 
 //middleware
@@ -29,6 +30,8 @@ router.route('/update-product').patch(adminAuthorization,upload.array('images'),
 router.route('/delete-product').delete(adminAuthorization,deleteProduct);
 router.route('/add-offer').post(adminAuthorization,upload.single('images'),addOffer);
 router.route('/orders').get(adminAuthorization,viewOrders);
+router.route('/delivery-orders').get(adminAuthorization,deliveryOrders);
+
 router.route('/change-status').patch(adminAuthorization,change_order_status);
 
 

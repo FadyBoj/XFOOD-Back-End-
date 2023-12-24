@@ -319,6 +319,23 @@ const viewOrders = async(req,res) =>{
 
 }
 
+const deliveryOrders = async(req,res) =>{
+
+    const user = req.user;
+    const userRole = user.role.toLowerCase();
+    const systemRoles = ['employee','manager','delivery']; 
+
+    if(!systemRoles.includes(userRole))
+    throw new CustomAPIError("Forbidden",403)
+
+    try {
+        const orders = await Order.find({status:'out to delivery'});
+        res.status(200).json(orders);
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500)
+    }
+}
+
 const change_order_status = async(req,res) =>{
     const { orderId, orderStatus } = req.body;
     const user = req.user;
@@ -338,7 +355,7 @@ const change_order_status = async(req,res) =>{
     try {
 
         const updatedOrder = await Order.findByIdAndUpdate({_id:orderId},{status:orderStatus.toLowerCase()});
-        res.status(200).json({msg:`Successfully changed order ${updatedOrder.id} to ${orderStatus}`});
+        res.status(200).json({msg:`Successfully changed order ${updatedOrder.id} to ${orderStatus.toLowerCase()}`});
         
     } catch (error) {
         throw new CustomAPIError("Order not found",400)
@@ -357,6 +374,7 @@ module.exports = {
     deleteProduct,
     addOffer,
     viewOrders,
-    change_order_status
+    change_order_status,
+    deliveryOrders
 
 }

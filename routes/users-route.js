@@ -17,7 +17,9 @@ const {
     clearCart,
     makeOrder,
     removeFromCart,
-    payment
+    payment,
+    previousOrders
+
 } = require('../controllers/users');
 
 const {
@@ -35,8 +37,9 @@ router.route('/add-to-cart').post(isAuth,addToCart)
 router.route('/cart-items').get(isAuth,cartItems)
 router.route('/clear-cart').get(isAuth,clearCart)
 router.route('/make-order').post(requiredAuth,makeOrder);
-router.route('/remove-from-cart').post(isAuth,removeFromCart),
+router.route('/remove-from-cart').post(isAuth,removeFromCart)
 router.route('/payment').get(requiredAuth,payment)
+router.route('/previous-orders').get(requiredAuth,previousOrders)
 
 
 

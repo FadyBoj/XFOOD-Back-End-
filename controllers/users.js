@@ -758,6 +758,21 @@ const payment  = async ( req , res ) => {
 	// create payment object 
    
 }; 
+
+
+const previousOrders = async (req,res) =>{
+    const user = req.user;
+
+    try {
+        const orders = await Order.find({userID:user.id});
+
+        return orders.length === 0 ? res.status(404).json({msg:"You don't any previous orders yet"}):
+        res.status(200).json({orders})
+
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500);
+    }
+}
  
 
 module.exports = {
@@ -772,5 +787,6 @@ module.exports = {
     clearCart,
     makeOrder,
     removeFromCart,
-    payment
+    payment,
+    previousOrders
 }

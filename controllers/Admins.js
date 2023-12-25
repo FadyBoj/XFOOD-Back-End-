@@ -142,6 +142,8 @@ const addProduct = async(req,res) =>{
   
 }
 
+
+
 //Update product
 
 const updateProduct = async(req,res) =>{
@@ -409,6 +411,21 @@ const addEmployee = async(req,res) =>{
     }
 }
 
+const getIngredientsTitles = async(req,res) =>{
+    
+    try {
+        let ingredients = await Ingredient.find({});
+        ingredients = ingredients.map((item) =>{
+            return item.title
+        })
+
+        res.status(200).json(ingredients)
+
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500)
+    }
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
@@ -420,6 +437,7 @@ module.exports = {
     viewOrders,
     change_order_status,
     deliveryOrders,
-    addEmployee
+    addEmployee,
+    getIngredientsTitles
 
 }

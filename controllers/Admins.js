@@ -74,6 +74,41 @@ const editIngredient = async(req,res) =>{
     }
 }
 
+
+//Increase ingredient qty
+
+const increaseIngredientQty = async(req,res) =>{
+    const user = req.user;
+    const userRole = user.role.toLowerCase();
+    const systemRoles = ['employee','manager']; 
+
+    if(!systemRoles.includes(userRole))
+    throw new CustomAPIError("Forbidden",403);
+
+    
+    const { title, newQty} = req.body;
+    if(!title || !newQty)
+    throw new CustomAPIError("ingredient title and qty must be provided",400);
+
+    try {
+        const updatedIngredient = await Ingredient.findOneAndUpdate({title:title.toLowerCase()},
+        {$inc:{quantity:newQty}},
+        {new:true});
+
+        if(!updatedIngredient)
+        return res.status(400).json({msg:"Ingredient not found"});
+
+        res.status(200).json({msg:"Successfully updated ingredient"})
+
+    } catch (error) {
+
+        throw new CustomAPIError("Something went wrong",400);
+
+    }
+
+
+}
+
 //Add product
 
 const addProduct = async(req,res) =>{
@@ -438,6 +473,6 @@ module.exports = {
     change_order_status,
     deliveryOrders,
     addEmployee,
-    getIngredientsTitles
-
+    getIngredientsTitles,
+    increaseIngredientQty
 }

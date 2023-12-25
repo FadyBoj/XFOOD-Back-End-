@@ -4,11 +4,10 @@
   "description": "",
   "main": "index.js",
   "engines": {
-    "node": "18.x"
+    "node": "19.3.0"
   },
   "scripts": {
-    "start": "node app.js",
-    "build":"npm i && node app.js"
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",

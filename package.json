@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node app.js",
-    "build":"npm i"
+    "build":"npm i && node app.js"
   },
   "keywords": [],
   "author": "",

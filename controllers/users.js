@@ -316,7 +316,7 @@ const addToCart = async(req,res) =>{
                     })
                     const fiveDays = 1000 * 60 * 60 * 24 * 5;
                     res.cookie('cart',testCart,{httpOnly:true,secure:true,sameSite:'None',maxAge:fiveDays});
-                    return res.status(400).json({msg:"Product quantity increased"});
+                    return res.status(200).json({msg:"Product quantity increased"});
                 }
                 i++;
             }
@@ -348,7 +348,7 @@ const addToCart = async(req,res) =>{
            })
 
            await User.findByIdAndUpdate({_id:user[0].id},{cartItems:testCart});
-           return res.status(400).json({msg:"Product quantity increased"});
+           return res.status(200).json({msg:"Product quantity increased"});
         }
         i++
     }

@@ -414,10 +414,7 @@ const addEmployee = async(req,res) =>{
 const getIngredientsTitles = async(req,res) =>{
     
     try {
-        let ingredients = await Ingredient.find({});
-        ingredients = ingredients.map((item) =>{
-            return item.title
-        })
+        const ingredients = await Ingredient.find({});
 
         res.status(200).json(ingredients)
 

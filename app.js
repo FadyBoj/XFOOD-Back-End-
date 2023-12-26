@@ -1,11 +1,6 @@
 require('express-async-errors');
 const express = require('express');
 const app = express();
-
-app.use(cors({
-    origin: ['https://xfood.onrender.com','http://localhost:3000','http://localhost:5173'], // Replace with your actual frontend origin
-    credentials: true,
-  }));
 const path = require('path')
 const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
@@ -16,13 +11,19 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const paypal = require('paypal-rest-sdk');
+app.use(cors({
+    origin: ['https://xfood.onrender.com','http://localhost:3000','http://localhost:5173'], // Replace with your actual frontend origin
+    credentials: true,
+  }));
 const http = require('http');
 const socketIO = require('socket.io');
-const io = socketIO(server);
 const server = http.createServer(app)
+const io = socketIO(server);
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
+
+
 app.use(bodyParser.urlencoded({
     extended:false
 }))

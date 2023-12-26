@@ -13,7 +13,6 @@ const crypto = require('crypto');
 const paypal = require('paypal-rest-sdk');
 const http = require('http');
 const socketIO = require('socket.io');
-const server = http.createServer(app)
 const io = socketIO(server);
 
 //middleware
@@ -22,7 +21,8 @@ const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
 app.use(cors({
     origin: ['https://xfood.onrender.com','http://localhost:3000','http://localhost:5173'], // Replace with your actual frontend origin
     credentials: true,
-  }));
+}));
+const server = http.createServer(app)
 app.use(bodyParser.urlencoded({
     extended:false
 }))

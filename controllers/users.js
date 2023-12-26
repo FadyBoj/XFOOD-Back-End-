@@ -569,6 +569,7 @@ const makeOrder = async(req,res) =>{
             const productPrice = (product.price + increaseFactor + ((size - 150) * product.price_per_unit)) * qty;
              orderItems.push({
                 title:product.title,
+                image:product.images,
                 quantity:qty,
                 size:size,
                 ingredients:formatted_ingredients || [],

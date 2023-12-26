@@ -69,7 +69,7 @@ app.get('/self-ping',(req,res) =>{
 setInterval(async() =>{
 
     try {
-        const { data } = await axios.get('https://xfood.onrender.com/self-ping');
+        const { data } = await axios.get('https://xfood-ob2l.onrender.com/self-ping');
         
     } catch (error) {
     }

@@ -18,7 +18,7 @@ const {
     makeOrder,
     removeFromCart,
     payment,
-    previousOrders
+    previousOrders,
 
 } = require('../controllers/users');
 
@@ -39,8 +39,8 @@ router.route('/clear-cart').get(isAuth,clearCart)
 router.route('/make-order').post(requiredAuth,makeOrder);
 router.route('/remove-from-cart').post(isAuth,removeFromCart)
 router.route('/payment').get(requiredAuth,payment)
-router.route('/previous-orders').get(requiredAuth,previousOrders)
-
+router.route('/previous-orders').get(requiredAuth,previousOrders);
+ 
 
 
 module.exports = router

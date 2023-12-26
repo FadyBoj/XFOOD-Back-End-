@@ -383,6 +383,8 @@ const cartItems = async(req,res) =>{
     if(cart.length === 0)
     throw new CustomAPIError("Cart is already empty",400);
 
+    console.log(cart)
+
      let ingredients_prices = {};
  
     const ingredientsDB = await Ingredient.find({});
@@ -774,6 +776,7 @@ const previousOrders = async (req,res) =>{
         throw new CustomAPIError("Something went wrong",500);
     }
 }
+ 
  
 
 module.exports = {

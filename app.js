@@ -11,6 +11,10 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const paypal = require('paypal-rest-sdk');
+const http = require('http');
+const socketIO = require('socket.io');
+const server = http.createServer(app)
+const io = socketIO(server);
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
@@ -66,6 +70,18 @@ app.get('/self-ping',(req,res) =>{
     res.status(200).json({msg:"Successfully pinged"})
 })
 
+app.get('/signal',(req,res) =>{
+    try {
+        
+        io.emit('newOrder', { message: 'Condition met!' });
+        res.status(200).json({msg:"Successfully sent signal"})
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+)
+
 setInterval(async() =>{
 
     try {
@@ -80,7 +96,23 @@ setInterval(async() =>{
 const start = async() =>{
     try {
         await connectDB(process.env.MONGO_URI)
-        app.listen(port,() =>{
+        io.on('connection', (socket) => {
+            console.log('A user connected');
+          
+            // Listen for custom events
+            socket.on('newOrder', (data) => {
+              if (data.condition) {
+                // Emit a signal to the frontend
+                io.emit('newOrder', { message: 'Condition met!' });
+              }
+            });
+          
+            // Handle disconnection
+            socket.on('disconnect', () => {
+              console.log('User disconnected');
+            });
+          });
+        server.listen(port,() =>{
             console.log(`Server is Running at port ${port}...`)
         })
     } catch (error) {
@@ -91,4 +123,4 @@ const start = async() =>{
 
 start()
 
-module.exports = app
+ 

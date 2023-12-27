@@ -17,6 +17,7 @@ const socketIO = require('socket.io');
 const server = http.createServer(app)
 const io = socketIO(server);
 const jwt = require('jsonwebtoken');
+const User = require('./models/User');
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
@@ -108,15 +109,16 @@ const start = async() =>{
                 const token = parsedCookies.jwtToken;
                 try {
                     const decoded =  jwt.verify(token,process.env.JWT_SECRET);
-                    console.log(decoded)
+                    const user = User.findById(decoded.id).then((data) =>{
+                        const userRole = data.admin
+                        console.log(userRole, socket.id)
+                    })
                 } catch (error) {
                     console.log(error)
                 }
                 // Listen for custom events
-                socket.on('newOrder', (data) => {
-                    // Emit a signal to the frontend
-                });
-              
+            
+               
                 // Handle disconnection
                 socket.on('disconnect', () => {
                   console.log('User disconnected');
@@ -127,7 +129,7 @@ const start = async() =>{
         })
     } catch (error) {
         console.log(error)
-    }
+    }   
 }
 
 

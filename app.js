@@ -94,7 +94,7 @@ setInterval(async() =>{
 
 },1000 * 60 )
 
-
+app.set('activeUsers',{});
 
 const start = async() =>{
     try {
@@ -104,15 +104,29 @@ const start = async() =>{
 
                 //Checking if user is Admin or not
                 
+                try {
                 const cookies = socket.request.headers.cookie || '';
                 parsedCookies = cookie.parse(cookies)
                 const token = parsedCookies.jwtToken;
-                try {
+                
+                if(token){
                     const decoded =  jwt.verify(token,process.env.JWT_SECRET);
-                    const user = User.findById(decoded.id).then((data) =>{
-                        const userRole = data.admin
-                        console.log(userRole, socket.id)
+                     const user = User.findById(decoded.id).then((data) =>{
+                    const userRole = data.admin;
+                    if(!userRole){
+                        const previousActiveUsers = app.get('activeUsers')
+                        const updatedActiveUsers = {...previousActiveUsers,[socket.id]:'Blocked'}
+                        app.set('activeUsers',updatedActiveUsers);
+                        }
+                    else
+                    {
+                        const previousActiveUsers = app.get('activeUsers')
+                        const updatedActiveUsers = {...previousActiveUsers,[socket.id]:'Access'}
+                        app.set('activeUsers',updatedActiveUsers);
+                        }
                     })
+                }
+                
                 } catch (error) {
                     console.log(error)
                 }
@@ -121,7 +135,16 @@ const start = async() =>{
                
                 // Handle disconnection
                 socket.on('disconnect', () => {
-                  console.log('User disconnected');
+                    try {
+                        const previousActiveUsers = app.get('activeUsers');
+                        delete previousActiveUsers[socket.id];
+                        app.set('activeUsers',previousActiveUsers);
+                        console.log(app.get('activeUsers'));
+
+                    } catch (error) {
+                        console.log(error)
+                    }
+                  
                 });
               });
               app.set('socket',io)

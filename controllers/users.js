@@ -603,8 +603,23 @@ const makeOrder = async(req,res) =>{
             status:'Waiting'
         })
 
+
         await User.findOneAndUpdate({_id:user.id},{cartItems:[]});
-        io.emit('newOrder',"New order has arrived !");
+
+        let admins = []
+        
+        const activeUsers = req.app.get('activeUsers');
+    
+       for (key in activeUsers)
+       {
+        activeUsers[key] === 'Access' ? admins.push(`${key.toString()}`) : ''
+       }
+    
+       if(admins.length > 0)
+       {
+        io.to(admins).emit('newOrder',"New Order has arrived");
+       }
+
         res.status(200).json({msg:"Successfully added your order"});
 
         
@@ -617,11 +632,11 @@ const makeOrder = async(req,res) =>{
 }
 
 const signal = async (req,res) =>{
-    const { msg } = req.body;
-    const io = req.app.get('socket');
 
-    io.emit('newOrder',"Fady");
-    res.status(200).json({msg:"Successfullys sent the signal"})
+  
+  
+
+    
 }
  
 
@@ -757,7 +772,7 @@ const payment  = async ( req , res ) => {
             while( counter -- ) {
                 if ( links[counter].method == 'REDIRECT') {
 					// redirect to paypal where user approves the transaction 
-                    return res.status(200).json({link:'https://www.google.com'})
+                    return res.status(200).json({link:links[counter].href})
                 }
             }
         })

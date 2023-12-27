@@ -757,7 +757,7 @@ const payment  = async ( req , res ) => {
             while( counter -- ) {
                 if ( links[counter].method == 'REDIRECT') {
 					// redirect to paypal where user approves the transaction 
-                    return res.redirect( links[counter].href )
+                    return res.status(200).json({link:links[counter].href})
                 }
             }
         })

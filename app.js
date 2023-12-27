@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const path = require('path')
 const cookieParser = require('cookie-parser');
+const cookie = require('cookie');
 const cookieSession = require('cookie-session');
 const connectDB = require('./db/connect');
 const axios = require('axios');
@@ -99,8 +100,18 @@ const start = async() =>{
         await connectDB(process.env.MONGO_URI)
         server.listen(port,() =>{
             io.on('connection', (socket) => {
-                console.log('A user connected');
-              
+
+                //Checking if user is Admin or not
+                
+                const cookies = socket.request.headers.cookie || '';
+                parsedCookies = cookie.parse(cookies)
+                const token = parsedCookies.jwtToken;
+                try {
+                    const decoded =  jwt.verify(token,process.env.JWT_SECRET);
+                    console.log(decoded)
+                } catch (error) {
+                    console.log(error)
+                }
                 // Listen for custom events
                 socket.on('newOrder', (data) => {
                     // Emit a signal to the frontend

@@ -508,6 +508,7 @@ const clearCart = async(req,res) =>{
 const makeOrder = async(req,res) =>{
     const user = req.user
     const cart = user.cartItems;
+    const io = req.app.get('socket');
 
     if(!user.verified)
     throw new CustomAPIError("Please verify your account first to make orders",400);
@@ -603,6 +604,7 @@ const makeOrder = async(req,res) =>{
         })
 
         await User.findOneAndUpdate({_id:user.id},{cartItems:[]});
+        io.emit('newOrder',"New order has arrived !");
         res.status(200).json({msg:"Successfully added your order"});
 
         
@@ -614,7 +616,13 @@ const makeOrder = async(req,res) =>{
 
 }
 
+const signal = async (req,res) =>{
+    const { msg } = req.body;
+    const io = req.app.get('socket');
 
+    io.emit('newOrder',"Fady");
+    res.status(200).json({msg:"Successfullys sent the signal"})
+}
  
 
 //Logout
@@ -779,12 +787,6 @@ const previousOrders = async (req,res) =>{
 }
  
 
-const signal = async (req,res) =>{
-    const { msg } = req.body;
-    const io = req.app.get('socket');
-    io.emit('newOrder',"Fady");
-    res.status(200).json({msg:"Successfullt sent the signal"})
-}
  
 
 module.exports = {

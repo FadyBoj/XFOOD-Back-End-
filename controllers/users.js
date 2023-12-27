@@ -631,14 +631,6 @@ const makeOrder = async(req,res) =>{
 
 }
 
-const signal = async (req,res) =>{
-
-  
-  
-
-    
-}
- 
 
 //Logout
 
@@ -800,6 +792,38 @@ const previousOrders = async (req,res) =>{
         throw new CustomAPIError("Something went wrong",500);
     }
 }
+
+const inscreaseProductQty = async (req,res) =>{
+    const user = req.user
+    const isSigned = user ? true : false;
+    const cart = !isSigned ? req.cookies.cart : user[0].cartItems;
+    const { id } = req.body
+
+    if(!cart || cart.length === 0)
+    throw new CustomAPIError('Cart is empty',404);
+
+    if(!id)
+    throw new CustomAPIError('Product id must be provided',404);
+
+    const newCart = cart.map((item) =>{
+        return item.id === id ? {...item,qty:(item['qty'] + 1)} : item
+    })
+
+    console.log(newCart)
+
+   if(isSigned)
+   {
+    await User.findOneAndUpdate({_id:user[0].id},{cartItems:newCart});
+    return res.status(200).json({msg:`Successfully increased quantity of product with id ${id} `});
+   }
+
+   const fiveDays = 1000 * 60 * 60 * 24 * 5;
+   res.cookie('cart',newCart,{secure:true,httpOnly:true,sameSite:'None',maxAge:fiveDays})
+   res.status(200).json({msg:`Successfully increased quantity of product with id ${id} `});
+
+
+
+}
  
 
  
@@ -818,5 +842,5 @@ module.exports = {
     removeFromCart,
     payment,
     previousOrders,
-    signal
+    inscreaseProductQty
 }

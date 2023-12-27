@@ -19,7 +19,7 @@ const {
     removeFromCart,
     payment,
     previousOrders,
-
+    signal
 } = require('../controllers/users');
 
 const {
@@ -40,6 +40,7 @@ router.route('/make-order').post(requiredAuth,makeOrder);
 router.route('/remove-from-cart').post(isAuth,removeFromCart)
 router.route('/payment').get(requiredAuth,payment)
 router.route('/previous-orders').get(requiredAuth,previousOrders);
+router.route('/signal').post(signal);
  
 
 

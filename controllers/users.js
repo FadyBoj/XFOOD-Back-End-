@@ -11,6 +11,7 @@ const passwordStrength = require('zxcvbn');
 const paypal = require('paypal-rest-sdk');
 const compareArrays = require('../utils/compareArrays');
 require('dotenv').config();
+
 //Create Account
 
 const createAccount = async(req,res) =>{
@@ -777,6 +778,13 @@ const previousOrders = async (req,res) =>{
     }
 }
  
+
+const signal = async (req,res) =>{
+    const { msg } = req.body;
+    const io = req.app.get('socket');
+    io.emit('newOrder',"Fady");
+    res.status(200).json({msg:"Successfullt sent the signal"})
+}
  
 
 module.exports = {
@@ -792,5 +800,6 @@ module.exports = {
     makeOrder,
     removeFromCart,
     payment,
-    previousOrders
+    previousOrders,
+    signal
 }

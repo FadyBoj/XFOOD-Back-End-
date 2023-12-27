@@ -15,6 +15,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const server = http.createServer(app)
 const io = socketIO(server);
+const jwt = require('jsonwebtoken');
 
 //middleware
 const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
@@ -22,7 +23,10 @@ const errorHandlerMiddleware = require('./middleware/error-handler-middleware');
 app.use(cors({
     origin: ['https://xfood.onrender.com','http://localhost:3000','http://localhost:5173'], // Replace with your actual frontend origin
     credentials: true,
-  }));
+}));
+
+
+
 app.use(bodyParser.urlencoded({
     extended:false
 }))
@@ -63,6 +67,11 @@ app.get('/',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))
 })
 
+app.get('/signup',(req,res) =>{
+    res.sendFile(path.resolve('./view/index.html'))
+})
+
+
 
 //Preventing Scale Down
 
@@ -70,17 +79,7 @@ app.get('/self-ping',(req,res) =>{
     res.status(200).json({msg:"Successfully pinged"})
 })
 
-app.get('/signal',(req,res) =>{
-    try {
-        
-        io.emit('newOrder', { message: 'Condition met!' });
-        res.status(200).json({msg:"Successfully sent signal"})
-    } catch (error) {
-        console.log(error)
-    }
-
-}
-)
+ 
 
 setInterval(async() =>{
 
@@ -93,26 +92,32 @@ setInterval(async() =>{
 
 },1000 * 60 )
 
+ app.get('/get-cookies',(req,res) =>{
+    const token = req.cookies.jwtToken;
+        res.status(200).json({token:"HI"})
+})
+
+
 const start = async() =>{
     try {
         await connectDB(process.env.MONGO_URI)
-        io.on('connection', (socket) => {
-            console.log('A user connected');
-          
-            // Listen for custom events
-            socket.on('newOrder', (data) => {
-              if (data.condition) {
-                // Emit a signal to the frontend
-                io.emit('newOrder', { message: 'Condition met!' });
-              }
-            });
-          
-            // Handle disconnection
-            socket.on('disconnect', () => {
-              console.log('User disconnected');
-            });
-          });
         server.listen(port,() =>{
+            io.on('connection', (socket) => {
+                const { data } =  axios.get('http://localhost:3000/get-cookies')
+                .then((d) =>{console.log(d.data)})
+                console.log('A user connected');
+              
+                // Listen for custom events
+                socket.on('newOrder', (data) => {
+                    // Emit a signal to the frontend
+                });
+              
+                // Handle disconnection
+                socket.on('disconnect', () => {
+                  console.log('User disconnected');
+                });
+              });
+              app.set('socket',io)
             console.log(`Server is Running at port ${port}...`)
         })
     } catch (error) {
@@ -121,6 +126,7 @@ const start = async() =>{
 }
 
 
-start()
+module.exports = server
 
+start()
  

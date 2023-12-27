@@ -92,10 +92,6 @@ setInterval(async() =>{
 
 },1000 * 60 )
 
- app.get('/get-cookies',(req,res) =>{
-    const token = req.cookies.jwtToken;
-        res.status(200).json({token:"HI"})
-})
 
 
 const start = async() =>{
@@ -103,8 +99,6 @@ const start = async() =>{
         await connectDB(process.env.MONGO_URI)
         server.listen(port,() =>{
             io.on('connection', (socket) => {
-                const { data } =  axios.get('http://localhost:3000/get-cookies')
-                .then((d) =>{console.log(d.data)})
                 console.log('A user connected');
               
                 // Listen for custom events

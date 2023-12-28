@@ -19,7 +19,8 @@ const {
     removeFromCart,
     payment,
     previousOrders,
-    inscreaseProductQty
+    inscreaseProductQty,
+    decreaseProductQty
 } = require('../controllers/users');
 
 const {
@@ -41,6 +42,7 @@ router.route('/remove-from-cart').post(isAuth,removeFromCart)
 router.route('/payment').get(requiredAuth,payment)
 router.route('/previous-orders').get(requiredAuth,previousOrders);
 router.route('/increase-product-qty').post(isAuth,inscreaseProductQty);
+router.route('/decrease-product-qty').post(isAuth,decreaseProductQty)
  
 
 

@@ -797,20 +797,21 @@ const inscreaseProductQty = async (req,res) =>{
     const user = req.user
     const isSigned = user ? true : false;
     const cart = !isSigned ? req.cookies.cart : user[0].cartItems;
-    const { id } = req.body
+    const { id, ingredients } = req.body
 
     if(!cart || cart.length === 0)
     throw new CustomAPIError('Cart is empty',404);
 
-    if(!id)
-    throw new CustomAPIError('Product id must be provided',404);
+    if(!id || !ingredients)
+    throw new CustomAPIError('Product id and ingredients must be provided',404);
 
     const newCart = cart.map((item) =>{
-        return item.id === id ? {...item,qty:(item['qty'] + 1)} : item
+        return item.id === id && compareArrays(item.ingredients,ingredients) ? {...item,qty:(item['qty'] + 1)} : item
     })
 
     console.log(newCart)
 
+    
    if(isSigned)
    {
     await User.findOneAndUpdate({_id:user[0].id},{cartItems:newCart});
@@ -820,6 +821,56 @@ const inscreaseProductQty = async (req,res) =>{
    const fiveDays = 1000 * 60 * 60 * 24 * 5;
    res.cookie('cart',newCart,{secure:true,httpOnly:true,sameSite:'None',maxAge:fiveDays})
    res.status(200).json({msg:`Successfully increased quantity of product with id ${id} `});
+
+
+
+}
+
+const decreaseProductQty = async (req,res) =>{
+    const user = req.user
+    const isSigned = user ? true : false;
+    const cart = !isSigned ? req.cookies.cart : user[0].cartItems;
+    const { id } = req.body
+
+    if(!cart || cart.length === 0)
+    throw new CustomAPIError('Cart is empty',404);
+
+    if(!id)
+    throw new CustomAPIError('Product id must be provided',404);
+
+    let newCart = []
+
+    for(item of cart)
+    {
+     if(item.id !== id)
+     {
+         newCart.push(item)
+     }
+     else{
+        if(item.qty === 1)
+        return res.status(400).json({msg:"Can't decrease product quantity any more"});
+
+        newCart.push({...item,qty:item['qty'] -1});
+     }
+    
+    }
+
+    console.log(newCart)
+    // const newCart = cart.map((item) =>{
+    //     return item.id === id ? {...item,qty:(item['qty'] + 1)} : item
+    // })
+
+//     console.log(newCart)
+
+//    if(isSigned)
+//    {
+//     await User.findOneAndUpdate({_id:user[0].id},{cartItems:newCart});
+//     return res.status(200).json({msg:`Successfully increased quantity of product with id ${id} `});
+//    }
+
+//    const fiveDays = 1000 * 60 * 60 * 24 * 5;
+//    res.cookie('cart',newCart,{secure:true,httpOnly:true,sameSite:'None',maxAge:fiveDays})
+//    res.status(200).json({msg:`Successfully increased quantity of product with id ${id} `});
 
 
 
@@ -842,5 +893,6 @@ module.exports = {
     removeFromCart,
     payment,
     previousOrders,
-    inscreaseProductQty
+    inscreaseProductQty,
+    decreaseProductQty
 }

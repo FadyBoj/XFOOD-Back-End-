@@ -20,7 +20,8 @@ const {
     payment,
     previousOrders,
     inscreaseProductQty,
-    decreaseProductQty
+    decreaseProductQty,
+    renewOrder
 } = require('../controllers/users');
 
 const {
@@ -38,11 +39,12 @@ router.route('/add-to-cart').post(isAuth,addToCart)
 router.route('/cart-items').get(isAuth,cartItems)
 router.route('/clear-cart').get(isAuth,clearCart)
 router.route('/make-order').post(requiredAuth,makeOrder);
+router.route('/renew-order').post(requiredAuth,renewOrder)
 router.route('/remove-from-cart').post(isAuth,removeFromCart)
 router.route('/payment').get(requiredAuth,payment)
 router.route('/previous-orders').get(requiredAuth,previousOrders);
 router.route('/increase-product-qty').post(isAuth,inscreaseProductQty);
-router.route('/decrease-product-qty').post(isAuth,decreaseProductQty)
+router.route('/decrease-product-qty').post(isAuth,decreaseProductQty);
  
 
 

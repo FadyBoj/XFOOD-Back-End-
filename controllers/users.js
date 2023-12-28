@@ -552,6 +552,7 @@ const makeOrder = async (req, res) => {
 
             const productPrice = (product.price + increaseFactor + ((size - 150) * product.price_per_unit)) * qty;
             orderItems.push({
+                id:product.id,
                 title: product.title,
                 image: product.images,
                 quantity: qty,
@@ -602,7 +603,7 @@ const makeOrder = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        throw new CustomAPIError("Something went wrong while adding your order")
+        throw new CustomAPIError("Something went wrong while adding your order",500)
     }
 
 
@@ -846,13 +847,41 @@ const decreaseProductQty = async (req, res) => {
 
 
 const renewOrder = async (req, res) => {
+    const {orderId} = req.body;
+    if(!orderId)
+    throw new CustomAPIError("Order id must be provided",400);
+
     try {
         const user = req.user;
         const cart = user.cartItems;
-        console.log(cart)
+
+        const order = await Order.find({_id:orderId});
+
+        if(order.length === 0)
+        return res.status(404).json({msg:"Order not found"})
+
+        const orderItems = order[0].items;
+
+        const newCart = orderItems.map((item) =>{
+            return {
+                id:item.id,
+                size:item.size,
+                qty:item.quantity,
+                ingredients:item.ingredients
+            }
+        })
+
+        const updatedCart = [user.cartItems,newCart].flat();
+
+
+        await User.findByIdAndUpdate({_id:user.id},{cartItems:updatedCart});
+        res.status(200).json("Successfully added this order to you cart ");
+
+
 
     } catch (error) {
-
+        console.log(error)
+        throw new CustomAPIError("Order not found",404)
     }
 }
 

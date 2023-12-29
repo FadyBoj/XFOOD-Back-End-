@@ -138,7 +138,7 @@ const updateUserInformation = async(req,res) =>{
     updateQuery.phoneNumber = phoneNumber;
 
     if(address && address.length >= 5)
-    updateQuery.address = address;
+    updateQuery.address = [address].flat();
 
     console.log(updateQuery)
 

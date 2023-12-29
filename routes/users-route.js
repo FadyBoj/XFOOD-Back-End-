@@ -23,7 +23,8 @@ const {
     decreaseProductQty,
     renewOrder,
     updateUserInformation,
-    updatePassword
+    updatePassword,
+    rateOrder
 
 } = require('../controllers/users');
 
@@ -50,8 +51,10 @@ router.route('/increase-product-qty').post(isAuth,inscreaseProductQty);
 router.route('/decrease-product-qty').post(isAuth,decreaseProductQty);
 router.route('/update-user-information').patch(requiredAuth,updateUserInformation);
 router.route('/update-password').patch(requiredAuth,updatePassword);
+router.route('/rate-order').patch(requiredAuth,rateOrder);
 
 
- 
+
+
 
 module.exports = router

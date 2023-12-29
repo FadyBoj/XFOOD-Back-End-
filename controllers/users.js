@@ -171,7 +171,7 @@ const updatePassword = async(req,res) =>{
         const hash = bcrypt.hashSync(newPassword,10);
         await User.findByIdAndUpdate({_id:user.id},{password:hash});
         res.status(200).json({msg:"Successfully updated your password"});
-        
+
     } catch (error) {
         throw new CustomAPIError("Something went wrong",500);
 
@@ -951,6 +951,37 @@ const renewOrder = async (req, res) => {
 }
 
 
+const rateOrder = async(req,res) =>{
+    const { orderId, orderRating } = req.body
+
+    if(!orderId || !orderRating || !(orderRating >= 1 && orderRating < 6))
+    throw new CustomAPIError("order id and order rating (1:5) must be provided",400);
+
+    try {
+        const user = req.user;
+        const userOrders = await Order.find({userID:user.id});
+
+        if(userOrders.length === 0)
+        return res.status(400).json({msg:"You don't have any orders to rate yet."})
+
+        const userOrdersIds = userOrders.map((item) =>{
+            return item.id
+        });
+
+        if(!userOrdersIds.includes(orderId))
+        return res.status(400).json({msg:"The order that you're trying to rate is not yours ."});
+
+        await Order.findOneAndUpdate({_id:orderId},{rating:orderRating});
+
+        res.status(200).json({msg:`Successfully rated your order with ${orderRating}`})
+
+    } catch (error) {
+        console.log(error)
+        throw new CustomAPIError("Something went wrong",500);
+    }
+  
+}
+
 
 module.exports = {
     createAccount,
@@ -970,6 +1001,7 @@ module.exports = {
     decreaseProductQty,
     renewOrder,
     updateUserInformation,
-    updatePassword
+    updatePassword,
+    rateOrder
 
 }

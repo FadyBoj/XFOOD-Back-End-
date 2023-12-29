@@ -38,6 +38,11 @@ const Order = new mongoose.Schema({
         type:String,
         required:true
     },
+    rating:{
+        type:Number,
+        required:false,
+        default:null
+    }
 
 
 })

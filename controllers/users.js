@@ -933,12 +933,13 @@ const renewOrder = async (req, res) => {
 
         orderItems = orderR[0].items;
 
-        let newCart = [];
-        let previousItems = []
+        let newCart = cart;
+        const previousCart = cart
+        let newItems = [];
 
         if(cart.length === 0)
         {
-            newCart = orderItems.map((item) =>{
+            newItems = orderItems.map((item) =>{
                 return {
                     id:item.id,
                     size:item.size,
@@ -946,45 +947,48 @@ const renewOrder = async (req, res) => {
                     ingredients:item.ingredients
                 }
             })
-            await User.findByIdAndUpdate({_id:user.id},{cartItems:newCart});
+            await User.findByIdAndUpdate({_id:user.id},{cartItems:newItems});
             return res.status(200).json({msg:"Successfully renewed your previous order."});
         }
 
+        console.log(previousCart)
 
-        orderItems.map((item) =>{
 
-            const pushableItem = {
-                id:item.id,
-                size:item.size,
-                qty:item.quantity,
-                ingredients:item.ingredients
+        for (item of orderItems)
+        {
+            let exist = false;
+
+            for (cartI of newCart)
+            {
+                if(cartI.id === item.id && cartI.size === item.size && compareArrays(cartI.ingredients,item.ingredients))
+                {
+                    exist = true;
+                    break;
+                }
             }
 
-             for(userCItem of cart)
-             {
-                if(item.id === userCItem.id && compareArrays(item.ingredients,userCItem.ingredients) && item.size === userCItem.size){
-                    previousItems.push(pushableItem);
-                    break;
-                }
-                else{
-                    newCart.push(pushableItem);
-                    break;
-                }
-             }
-        })
+            if(!exist)
+            {
+                newItems.push({
+                    id:item.id,
+                    size:item.size,
+                    qty:item.quantity,
+                    ingredients:item.ingredients
+                })
+            }
+                
+        }
+        
+        const updatedCart = [cart,newItems].flat();
+ 
+        if(compareArrays(updatedCart,cart))
+        return res.status(400).json({msg:"The order you're trying to renew is already in your cart"})
 
-        newCart = [previousItems,newCart].flat()
-
-   
-
-        if(compareArrays(newCart,cart))
-        return res.status(400).json({msg:"The order you're trying to renew is already in your cart"});
-
-
-        await User.findByIdAndUpdate({_id:user.id},{cartItems:newCart});
+        await User.findByIdAndUpdate({_id:user.id},{cartItems:updatedCart});
         res.status(200).json({msg:"Successfully renewed your previous order."});
 
     } catch (error) {
+        console.log(error)
         throw new CustomAPIError("Something went wrong",500)
     }
     

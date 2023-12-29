@@ -871,10 +871,8 @@ const renewOrder = async (req, res) => {
             }
         })
 
-        const updatedCart = [user.cartItems,newCart].flat();
 
-
-        await User.findByIdAndUpdate({_id:user.id},{cartItems:updatedCart});
+        await User.findByIdAndUpdate({_id:user.id},{cartItems:newCart});
         res.status(200).json("Successfully added this order to you cart ");
 
 

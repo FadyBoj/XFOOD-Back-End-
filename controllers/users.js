@@ -916,38 +916,78 @@ const decreaseProductQty = async (req, res) => {
 const renewOrder = async (req, res) => {
     const {orderId} = req.body;
     if(!orderId)
-    throw new CustomAPIError("Order id must be provided",400);
+    throw new CustomAPIError("Order id must be provided",400);;
+
+    const user = req.user;
+    const cart = user.cartItems || [];
+
+
 
     try {
-        const user = req.user;
-        const cart = user.cartItems;
 
-        const order = await Order.find({_id:orderId});
+        //Fetching the order that user wants to renew
+        const orderR = await Order.find({_id:orderId});
 
-        if(order.length === 0)
-        return res.status(404).json({msg:"Order not found"})
+        if(orderR.length === 0)
+        return res.status(404).json({msg:"Can't find the order that you're trying to renew."});
 
-        const orderItems = order[0].items;
+        orderItems = orderR[0].items;
 
-        const newCart = orderItems.map((item) =>{
-            return {
+        let newCart = [];
+        let previousItems = []
+
+        if(cart.length === 0)
+        {
+            newCart = orderItems.map((item) =>{
+                return {
+                    id:item.id,
+                    size:item.size,
+                    qty:item.quantity,
+                    ingredients:item.ingredients
+                }
+            })
+            await User.findByIdAndUpdate({_id:user.id},{cartItems:newCart});
+            return res.status(200).json({msg:"Successfully renewed your previous order."});
+        }
+
+
+        orderItems.map((item) =>{
+
+            const pushableItem = {
                 id:item.id,
                 size:item.size,
                 qty:item.quantity,
                 ingredients:item.ingredients
             }
+
+             for(userCItem of cart)
+             {
+                if(item.id === userCItem.id && compareArrays(item.ingredients,userCItem.ingredients) && item.size === userCItem.size){
+                    previousItems.push(pushableItem);
+                    break;
+                }
+                else{
+                    newCart.push(pushableItem);
+                    break;
+                }
+             }
         })
+
+        newCart = [previousItems,newCart].flat()
+
+   
+
+        if(compareArrays(newCart,cart))
+        return res.status(400).json({msg:"The order you're trying to renew is already in your cart"});
 
 
         await User.findByIdAndUpdate({_id:user.id},{cartItems:newCart});
-        res.status(200).json("Successfully added this order to you cart ");
-
-
+        res.status(200).json({msg:"Successfully renewed your previous order."});
 
     } catch (error) {
-        console.log(error)
-        throw new CustomAPIError("Order not found",404)
+        throw new CustomAPIError("Something went wrong",500)
     }
+    
 }
 
 

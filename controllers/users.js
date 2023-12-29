@@ -153,6 +153,33 @@ const updateUserInformation = async(req,res) =>{
 
 }
 
+const updatePassword = async(req,res) =>{
+    const user = req.user
+    const { oldPassword, newPassword } = req.body;
+    const isMatched = bcrypt.compareSync(oldPassword,user.password);
+
+    if(!isMatched)
+    throw new CustomAPIError("Wrong password",400);
+
+    if(!oldPassword || !newPassword)
+    throw new CustomAPIError("Old and new password must be provided",400);
+
+    if(passwordStrength(newPassword).score < 3)
+    throw new CustomAPIError("Please use a stronger password",400);
+
+    try {
+        const hash = bcrypt.hashSync(newPassword,10);
+        await User.findByIdAndUpdate({_id:user.id},{password:hash});
+        res.status(200).json({msg:"Successfully updated your password"});
+        
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong",500);
+
+    }
+
+
+}
+
 //Mobile login
 
 const mobileLogin = async (req, res) => {
@@ -942,5 +969,7 @@ module.exports = {
     inscreaseProductQty,
     decreaseProductQty,
     renewOrder,
-    updateUserInformation
+    updateUserInformation,
+    updatePassword
+
 }

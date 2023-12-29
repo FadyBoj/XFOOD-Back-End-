@@ -18,6 +18,7 @@ const requiredAuth = async(req,res,next) =>{
         const data = {
             id:user[0].id,
             email:user[0].email,
+            password:user[0].password,
             firstname:user[0].firstname,
             lastname:user[0].lastname,
             address:user[0].address,

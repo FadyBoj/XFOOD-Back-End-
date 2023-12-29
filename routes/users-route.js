@@ -21,7 +21,8 @@ const {
     previousOrders,
     inscreaseProductQty,
     decreaseProductQty,
-    renewOrder
+    renewOrder,
+    updateUserInformation
 } = require('../controllers/users');
 
 const {
@@ -45,6 +46,8 @@ router.route('/payment').get(requiredAuth,payment)
 router.route('/previous-orders').get(requiredAuth,previousOrders);
 router.route('/increase-product-qty').post(isAuth,inscreaseProductQty);
 router.route('/decrease-product-qty').post(isAuth,decreaseProductQty);
+router.route('/update-user-information').patch(requiredAuth,updateUserInformation);
+
  
 
 

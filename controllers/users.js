@@ -10,6 +10,8 @@ const Order = require('../models/Order');
 const passwordStrength = require('zxcvbn');
 const paypal = require('paypal-rest-sdk');
 const compareArrays = require('../utils/compareArrays');
+const validator = require("email-validator");
+
 require('dotenv').config();
 
 //Create Account
@@ -18,7 +20,7 @@ const createAccount = async (req, res) => {
     try {
         const { firstname, lastname, email, password, age, phoneNumber, address } = req.body;
 
-        if (!firstname || !lastname || !email || !password || !age || !phoneNumber)
+        if (!firstname || !lastname || !email || !password || !age || !phoneNumber || !address)
             throw new CustomAPIError('Please fill in your information', 400);
 
 
@@ -33,7 +35,7 @@ const createAccount = async (req, res) => {
             lastname: lastname,
             email: email.toLowerCase(),
             password: hash,
-            address: address || [],
+            address: [address] || [],
             phoneNumber: phoneNumber,
             age: Number(age),
             verificationCode: {
@@ -109,6 +111,44 @@ const login = async (req, res) => {
     }
 
 
+}
+
+//Update user information
+const updateUserInformation = async(req,res) =>{
+    const user = req.user;
+    const {firstname, lastname, email, phoneNumber, address } = req.body;
+
+    if(!firstname && !lastname && !email && !phoneNumber && !address)
+    throw new CustomAPIError("Provide information in order to update yours", 400);
+
+   
+
+    const updateQuery = {};
+
+    if(firstname && firstname.length >= 3)
+    updateQuery.firstname = firstname;
+
+    if(lastname && lastname.length >= 3)
+    updateQuery.lastname = lastname;
+
+    if(email && validator.validate(email))
+    updateQuery.email = email;
+
+    if(phoneNumber && phoneNumber.length > 12)
+    updateQuery.phoneNumber = phoneNumber;
+
+    if(address && address.length >= 5)
+    updateQuery.address = address;
+
+    console.log(updateQuery)
+
+    try {
+        await User.findOneAndUpdate({_id:user.id},updateQuery);
+        res.status(200).json({updated_properties:updateQuery});
+    } catch (error) {
+        throw new CustomAPIError("Something went wrong", 500);
+
+    }
 
 
 }
@@ -901,5 +941,6 @@ module.exports = {
     previousOrders,
     inscreaseProductQty,
     decreaseProductQty,
-    renewOrder
+    renewOrder,
+    updateUserInformation
 }

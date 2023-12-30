@@ -461,6 +461,22 @@ const getIngredientsTitles = async(req,res) =>{
     }
 }
 
+const getUsersInformation = async(req,res) =>{
+    try {
+        const users = await  User.find({});
+        console.log(users)
+        const ids = users.map((user) =>{
+            return user.id
+        })
+
+        res.status(200).json({users:ids})
+
+    } catch (error) {
+        console.log(error)
+        throw new CustomAPIError("Something went wrong",500)
+    }
+}
+
 module.exports = {
     addIngredient,
     deleteIngredient,
@@ -474,5 +490,6 @@ module.exports = {
     deliveryOrders,
     addEmployee,
     getIngredientsTitles,
-    increaseIngredientQty
+    increaseIngredientQty,
+    getUsersInformation
 }

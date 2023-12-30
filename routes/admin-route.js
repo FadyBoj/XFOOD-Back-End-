@@ -17,7 +17,8 @@ const {
     deliveryOrders,
     addEmployee,
     getIngredientsTitles,
-    increaseIngredientQty
+    increaseIngredientQty,
+    getUsersInformation
 } = require('../controllers/Admins');   
 
 //middleware
@@ -38,6 +39,7 @@ router.route('/change-status').patch(adminAuthorization,change_order_status);
 router.route('/add-employee').post(adminAuthorization,addEmployee);
 router.route('/ingredients').get(adminAuthorization,getIngredientsTitles);
 router.route('/increase-ingredient').patch(adminAuthorization,increaseIngredientQty);
+router.route('/users-info').get(adminAuthorization,getUsersInformation);
 
 
 

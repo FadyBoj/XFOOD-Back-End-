@@ -5,7 +5,7 @@ const User = require('../models/User');
 
 const adminAuthorization = async (req,res,next) =>{
 
-    const token = req.cookies.jwtToken;
+    const token = req.cookies.jwtToken || req.headers.authorization;
 
         if(!token)
         throw new CustomAPIError("No token provided",401);

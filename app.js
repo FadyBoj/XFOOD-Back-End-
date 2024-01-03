@@ -98,7 +98,7 @@ app.set('activeUsers',{});
 
 const start = async() =>{
     try {
-        // await connectDB(process.env.MONGO_URI)
+        await connectDB(process.env.MONGO_URI)
         server.listen(port,() =>{
             io.on('connection', (socket) => {
                 //Checking if user is Admin or not

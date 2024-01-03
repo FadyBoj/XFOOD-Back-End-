@@ -15,6 +15,7 @@ const getProducts = async(req,res) =>{
             prices = {...prices,[item.title]:item.price}
         })
 
+
         const products = await Product.find(queryObject);
 
         const formattedProducts =  products.map((item) =>{

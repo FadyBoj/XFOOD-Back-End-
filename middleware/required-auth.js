@@ -23,7 +23,7 @@ const requiredAuth = async(req,res,next) =>{
             lastname:user[0].lastname,
             address:user[0].address,
             cartItems:user[0].cartItems,
-            previousOrders:user[0].previousOrders,
+            previousOrders:user[ 0].previousOrders,
             wishList:user[0].wishList,
             verified:user[0].verified,
             verificationCode:user[0].verificationCode,

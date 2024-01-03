@@ -247,7 +247,8 @@ const checkAuth = async (req, res) => {
             verified: user[0].verified,
             verificationCode: user[0].verificationCode,
             role: user[0].role,
-            admin: user[0].admin
+            admin: user[0].admin,
+            phoneNumber:user[0].phoneNumber
         }
 
         res.status(200).json({ user: data });
@@ -470,7 +471,8 @@ const cartItems = async (req, res) => {
 
         res.status(200).json({ cart: cartItems, total_price: total_price })
 
-    } catch (error) {
+    } catch (error) {-+
+        
         console.log(error)
         throw new CustomAPIError("Something went wrong", 500);
     }

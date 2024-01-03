@@ -98,10 +98,9 @@ app.set('activeUsers',{});
 
 const start = async() =>{
     try {
-        await connectDB(process.env.MONGO_URI)
+        // await connectDB(process.env.MONGO_URI)
         server.listen(port,() =>{
             io.on('connection', (socket) => {
-
                 //Checking if user is Admin or not
                 
                 try {
@@ -117,14 +116,21 @@ const start = async() =>{
                         const previousActiveUsers = app.get('activeUsers')
                         const updatedActiveUsers = {...previousActiveUsers,[socket.id]:'Blocked'}
                         app.set('activeUsers',updatedActiveUsers);
+                        console.log(app.get('activeUsers'));
+
+
                         }
                     else
                     {
                         const previousActiveUsers = app.get('activeUsers')
                         const updatedActiveUsers = {...previousActiveUsers,[socket.id]:'Access'}
                         app.set('activeUsers',updatedActiveUsers);
+                        console.log(app.get('activeUsers'));
+
+
                         }
                     })
+
                 }
                 
                 } catch (error) {

@@ -41,7 +41,7 @@ app.use(cookieSession({
     path:'/'
 
 }))
-app.use(express.static('./dist'))
+app.use(express.static('./build'))
 
 // configure paypal with the credentials you got when you created your paypal app
 paypal.configure({
@@ -68,6 +68,18 @@ const port = process.env.PORT || 3000;
 app.get('/',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))
 })
+app.get('/product/:id',(req,res) =>{
+    res.sendFile(path.resolve('./view/index.html'))
+})
+
+app.get('/cart',(req,res) =>{
+    res.sendFile(path.resolve('./view/index.html'))
+})
+
+app.get('/checkout',(req,res) =>{
+    res.sendFile(path.resolve('./view/index.html'))
+})
+
 
 app.get('/signup',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))

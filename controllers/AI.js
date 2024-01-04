@@ -4,7 +4,7 @@ const CustomAPIError = require('../error/CustomAPIError');
 const getBotRespond = async(req,res) =>{
     const { msg } = req.body;
     try {
-        const { data } = await axios.get(`http://127.0.0.1:5000/send-msg/${msg}`);
+        const { data } = await axios.get(`https://xfood-bot-bb4s.onrender.com/send-msg/${msg}`);
         res.status(200).json({msg:data.XFOOD})
 
     } catch (error) {

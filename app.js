@@ -85,6 +85,11 @@ app.get('/signup',(req,res) =>{
     res.sendFile(path.resolve('./view/index.html'))
 })
 
+app.get('/dashboard',(req,res) =>{
+    res.sendFile(path.resolve('./view/index.html'))
+})
+
+
 
 
 //Preventing Scale Down
